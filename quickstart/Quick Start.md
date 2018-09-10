@@ -7,8 +7,10 @@ Currently the modified source code and configuration files supporting Splice Mac
 Scripts for loading and executing htap1000: 
 
 The host information needs to be edited in the following files: 
+
 •	drop-htap.sh and load-htap.sh: SPLICE_HOST variable and SQLSHELL_PATH variable.
-•	config/htap_config_splicemachine_<N>.xml: for files 0-4 the database url needs to be modified to the correct host name. 
+
+•	config/htap_config_splicemachine_&lt;N&gt;.xml: for files 0-4 the database url needs to be modified to the correct host name. 
 
 The following scripts are included with this quick start: 
 
