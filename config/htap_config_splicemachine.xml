@@ -4,7 +4,7 @@
 	<!-- Connection details -->
 	<dbtype>splicemachine</dbtype>
 	<driver>com.splicemachine.db.jdbc.ClientDriver</driver>
-	<DBUrl>jdbc:splice://cloud.splicemachine.io:1527/splicedb;ssl=basic</DBUrl>
+	<DBUrl>jdbc:splice://localhost:1527/splicedb;ssl=basic</DBUrl>
 	<username>htap25</username>
 	<password>htapuser</password>
 	<isolation>TRANSACTION_SERIALIZABLE</isolation>
@@ -27,7 +27,7 @@
 			<weights bench="tpcc">45,43,4,4</weights>
  			<active_terminals bench="chbenchmark">1</active_terminals>
 			<rate bench="chbenchmark">unlimited</rate>
-			<weights bench="chbenchmark">5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
+			<weights bench="chbenchmark">5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
 		</work>
 	</works>
 	
@@ -54,9 +54,9 @@
 		<transactiontype>
 			<name>Q7</name>
 		</transactiontype>
-		<transactiontype>
+		<!--<transactiontype>
 			<name>Q8</name>
-		</transactiontype>
+		</transactiontype>-->
 		<transactiontype>
 			<name>Q9</name>
 		</transactiontype>

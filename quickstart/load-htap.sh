@@ -2,7 +2,7 @@
 set -x
 echo 'load htap'
 
-SPLICE_HOST='cloud.splicemachine.io'
+SPLICE_HOST='localhost'
 SPLICE_PORT='1527'
 SPLICE_USERNAME=${1:-splice}
 SPLICE_PSWD=${2:-admin}

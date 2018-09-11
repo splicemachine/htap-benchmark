@@ -383,7 +383,12 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                     // }
 
                     status = TransactionStatus.UNKNOWN;
+                	if (LOG.isInfoEnabled()) LOG.info(String.format("Executing '%s' on '%s'", next, this.toString()));
                     status = this.executeWork(next);
+                    if (LOG.isInfoEnabled()) LOG.info(
+                    		String.format("Completed '%s' on '%s', %s, connection %s", 
+                    				next, this.toString(), status.toString(), 
+                    				(conn.isClosed() ? "closed" : "open")));
 
                 // User Abort Handling
                 // These are not errors
@@ -413,7 +418,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                 // Database System Specific Exception Handling
                 } catch (SQLException ex) {
                 	// TODO: Handle acceptable error codes for every DBMS
-                	if (LOG.isDebugEnabled())
+                	if (LOG.isInfoEnabled())
                 		LOG.warn(String.format("%s thrown when executing '%s' on '%s' " +
                 				"[Message='%s', ErrorCode='%d', SQLState='%s']",
                 				ex.getClass().getSimpleName(), next, this.toString(),

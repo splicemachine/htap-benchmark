@@ -2,13 +2,13 @@
 set -x
 echo 'drop htap1000'
 
-SPLICE_HOST='cloud.splicemachine.io'
+SPLICE_HOST='localhost'
 SPLICE_PORT='1527'
 SPLICE_USERNAME=${1:-splice}
 SPLICE_PSWD=${2:-admin}
 DATA_SET=${3:-htap1000}
 
-SQLSHELL_PATH=~/dev/awssplice/sqlshell
+SQLSHELL_PATH=/usr/bin/sqlshell
 
 echo 'using credentials:' $SPLICE_USERNAME $SPLICE_PSWD 'for data set:' $DATA_SET
 
