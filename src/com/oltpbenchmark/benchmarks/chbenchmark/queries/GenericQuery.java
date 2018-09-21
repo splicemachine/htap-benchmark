@@ -71,7 +71,7 @@ public abstract class GenericQuery extends Procedure {
     	if (owner != null)
             owner.setCurrStatement(stmt);
 
-    	LOG.info("Running " + this.getClass());
+    	LOG.trace("Running " + this.getClass());
         ResultSet rs = null;
         try {
             rs = stmt.executeQuery();

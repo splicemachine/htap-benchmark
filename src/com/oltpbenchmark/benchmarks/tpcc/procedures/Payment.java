@@ -376,12 +376,6 @@ public class Payment extends TPCCProcedure {
 
             LOG.trace(terminalMessage.toString());
         }
-        if (LOG.isInfoEnabled()) {
-        	StringBuilder terminalMessage = new StringBuilder();
-            terminalMessage.append("PAYMENT");
-            LOG.info(terminalMessage.toString());
-        }
-
 
         return null;
     }

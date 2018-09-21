@@ -292,7 +292,7 @@ public class NewOrder extends TPCCProcedure {
 				stmtGetStock.setInt(2, ol_supply_w_id);
 				rs = stmtGetStock.executeQuery();
 				if (!rs.next())
-					throw new RuntimeException("I_ID=" + ol_i_id
+					throw new RuntimeException("I_ID=" + ol_i_id + "at W_ID=" + ol_supply_w_id
 							+ " not found!");
 				s_quantity = rs.getInt("S_QUANTITY");
 				s_data = rs.getString("S_DATA");
@@ -418,11 +418,6 @@ public class NewOrder extends TPCCProcedure {
             terminalMessage.append(w_id);
             terminalMessage.append("\n+-----------------------------------------------------------------+\n");
             LOG.trace(terminalMessage.toString());
-        }
-        if (LOG.isInfoEnabled()) {
-        	StringBuilder terminalMessage = new StringBuilder();
-            terminalMessage.append("NEW ORDER O_ID=" + o_id + " D_ID=" + d_id + "W_ID=" + w_id);
-            LOG.info(terminalMessage.toString());
         }
 
 	}

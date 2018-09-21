@@ -126,11 +126,6 @@ public class StockLevel extends TPCCProcedure {
              terminalMessage.append("\n+-----------------------------------------------------------------+\n\n");
              LOG.trace(terminalMessage.toString());
          }
-         if (LOG.isInfoEnabled()) {
-         	StringBuilder terminalMessage = new StringBuilder();
-             terminalMessage.append("STOCK LEVEL");
-             LOG.info(terminalMessage.toString());
-         }
 
          return null;
 	 }

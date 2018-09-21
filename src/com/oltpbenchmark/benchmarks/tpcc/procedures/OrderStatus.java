@@ -218,12 +218,6 @@ public class OrderStatus extends TPCCProcedure {
             sb.append("+-----------------------------------------------------------------+\n\n");
             LOG.trace(sb.toString());
         }
-        if (LOG.isInfoEnabled()) {
-        	StringBuilder terminalMessage = new StringBuilder();
-            terminalMessage.append("ORDER STATUS");
-            LOG.info(terminalMessage.toString());
-        }
-
         
         return null;
     }

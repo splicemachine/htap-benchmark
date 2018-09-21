@@ -4,30 +4,29 @@
 	<!-- Connection details -->
 	<dbtype>splicemachine</dbtype>
 	<driver>com.splicemachine.db.jdbc.ClientDriver</driver>
-	<DBUrl>jdbc:splice://localhost:1527/splicedb;ssl=basic</DBUrl>
-	<username>htap1000</username>
+	<DBUrl>jdbc:splice://localhost:1527/splicedb</DBUrl>
+	<username>htap</username>
 	<password>htapuser</password>
 	<isolation>TRANSACTION_SERIALIZABLE</isolation>
 	
 	<!-- Scale factor is the number of warehouses in TPCC -->
-	<scalefactor>1000</scalefactor>
+	<scalefactor>25</scalefactor>
 
 	<!-- The workload -->
-	<terminals>1000</terminals>
+	<terminals>25</terminals>
 	<works>
 		<work>
 			<!-- set serial to true for testing each transaction once - be sure to set 0 for time value --> 
 			<!--<serial>true</serial>-->
 
 			<!--<warmup>300</warmup>-->
-			<time>300</time>
-			<active_terminals bench="tpcc">1000</active_terminals>
+			<time>30</time>
+			<active_terminals bench="tpcc">25</active_terminals>
 			<rate bench="tpcc">unlimited</rate>
-			<!--			<weights bench="tpcc">45,43,4,4,4</weights> -->
-			<weights bench="tpcc">45,43,4,4</weights>
- 			<active_terminals bench="chbenchmark">3</active_terminals>
+			<weights bench="tpcc">45,43,4,4,4</weights>
+ 			<active_terminals bench="chbenchmark">1</active_terminals>
 			<rate bench="chbenchmark">unlimited</rate>
-			<weights bench="chbenchmark">5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
+			<weights bench="chbenchmark">5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
 		</work>
 	</works>
 	
@@ -36,9 +35,9 @@
 		<transactiontype>
 			<name>Q1</name>
 		</transactiontype>
-		<!--<transactiontype>
+		<transactiontype>
 			<name>Q2</name>
-		</transactiontype>-->
+		</transactiontype>
 		<transactiontype>
 			<name>Q3</name>
 		</transactiontype>
@@ -54,9 +53,11 @@
 		<transactiontype>
 			<name>Q7</name>
 		</transactiontype>
-		<!--<transactiontype>
+		<!-- further optimization needed
+		<transactiontype>
 			<name>Q8</name>
-		</transactiontype>-->
+		</transactiontype>
+		-->
 		<transactiontype>
 			<name>Q9</name>
 		</transactiontype>
@@ -78,9 +79,9 @@
 		<transactiontype>
 			<name>Q15</name>
 		</transactiontype>   
-		<!--<transactiontype>
+		<transactiontype>
 			<name>Q16</name>
-		</transactiontype>-->    	
+		</transactiontype>
 		<transactiontype>
 			<name>Q17</name>
 		</transactiontype>   
@@ -113,8 +114,8 @@
 		<transactiontype>
 			<name>Delivery</name>
 		</transactiontype>
-		<!--<transactiontype>
+		<transactiontype>
 			<name>StockLevel</name>
-		</transactiontype>-->
+		</transactiontype>
 	</transactiontypes>	
 </parameters>

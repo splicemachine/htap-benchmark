@@ -386,9 +386,9 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                 	if (LOG.isInfoEnabled()) LOG.info(String.format("Executing '%s' on '%s'", next, this.toString()));
                     status = this.executeWork(next);
                     if (LOG.isInfoEnabled()) LOG.info(
-                    		String.format("Completed '%s' on '%s', %s, connection %s", 
+                    		String.format("Completed '%s' on '%s', %s %s", 
                     				next, this.toString(), status.toString(), 
-                    				(conn.isClosed() ? "closed" : "open")));
+                    				(conn.isClosed() ? ", connection closed" : "")));
 
                 // User Abort Handling
                 // These are not errors

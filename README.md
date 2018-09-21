@@ -42,4 +42,8 @@ Please visit the project homepage for anything other than source code: <http://o
 
 ## Dependencies
 
-+ Java (+1.7)
++ Java (1.8)
+
+## Support for Splice Machine on CH-benCHmark
+
+This fork includes a [Quick Start](https://github.com/splicemachine/htap-benchmark/wiki) to get you up and running the CH-benCHmark with Splice Machine on OLTP-Bench. Enjoy! 

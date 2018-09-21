@@ -1,10 +1,14 @@
-/* sql script to create schema and load data for tpcc and chbanchmark data from S3 for htap1000 */
+/* sql script to create schema and load data for tpcc and chbanchmark data for htap-25 */
+
+elapsedtime on;
+
+connect 'jdbc:splice://localhost:1527/splicedb;user=splice;password=admin';
 
 /* Part 1 - create usr */ 
 
-call SYSCS_UTIL.SYSCS_CREATE_USER('htap1000','htapuser');
+call SYSCS_UTIL.SYSCS_CREATE_USER('htap','htapuser');
 
-set schema htap1000;
+set schema htap;
 
 /* Part 2 - create tables, indexes, and view via ddl script - will move to oltpbench in the future */ 
 
@@ -104,29 +108,6 @@ CREATE TABLE ORDER_LINE (
   PRIMARY KEY (OL_W_ID,OL_D_ID,OL_O_ID,OL_NUMBER)
 );
 
--- Note: temporary table for process to add S_SUPPKEY to STOCK
-DROP TABLE IF EXISTS MODSTOCK;
-CREATE TABLE MODSTOCK (
-  S_W_ID INT NOT NULL,
-  S_I_ID INT NOT NULL,
-  S_QUANTITY DECIMAL(4,0) NOT NULL,
-  S_YTD DECIMAL(8,2) NOT NULL,
-  S_ORDER_CNT INT NOT NULL,
-  S_REMOTE_CNT INT NOT NULL,
-  S_DATA VARCHAR(50) NOT NULL,
-  S_DIST_01 CHAR(24) NOT NULL,
-  S_DIST_02 CHAR(24) NOT NULL,
-  S_DIST_03 CHAR(24) NOT NULL,
-  S_DIST_04 CHAR(24) NOT NULL,
-  S_DIST_05 CHAR(24) NOT NULL,
-  S_DIST_06 CHAR(24) NOT NULL,
-  S_DIST_07 CHAR(24) NOT NULL,
-  S_DIST_08 CHAR(24) NOT NULL,
-  S_DIST_09 CHAR(24) NOT NULL,
-  S_DIST_10 CHAR(24) NOT NULL,
-  PRIMARY KEY (S_W_ID,S_I_ID)
-);
-
 CREATE TABLE STOCK (
   S_W_ID INT NOT NULL,
   S_I_ID INT NOT NULL,
@@ -189,15 +170,6 @@ create table supplier (
    PRIMARY KEY ( su_suppkey )
 );
 
--- create indexes
-CREATE INDEX IDX_CUSTOMER_NAME ON CUSTOMER (C_W_ID,C_D_ID,C_LAST,C_FIRST);
-
-CREATE INDEX STOCK_SUPPKEY ON STOCK (S_SUPPKEY, S_I_ID, S_W_ID, S_ORDER_CNT);
-CREATE INDEX STOCK_I_ID ON STOCK (S_I_ID, S_SUPPKEY, S_W_ID, S_QUANTITY);
-CREATE INDEX SUPPLIER_SUPPKEY ON SUPPLIER (SU_SUPPKEY, su_nationkey);
-CREATE INDEX ITEM_ID ON ITEM (I_ID, I_DATA);
-CREATE INDEX OL_I_ID ON ORDER_LINE (OL_I_ID, OL_O_ID, OL_W_ID, OL_D_ID);
-
 -- create view for Q15
 CREATE view revenue0 (supplier_no, total_revenue) AS 
 SELECT supplier_no, sum(cast(ol_amount as decimal(12,2))) as total_revenue 
@@ -210,52 +182,51 @@ AND ol_delivery_d >= '2007-01-02 00:00:00.000000'
 GROUP BY supplier_no;
 
 
-/* Part 3 - load data from S3 csvs */
+/* Part 3 - load data from csvs */
 
--- something quick to start to ensure everything is working
+call SYSCS_UTIL.IMPORT_DATA (current schema,'WAREHOUSE','W_ID,W_YTD,W_TAX,W_NAME,W_STREET_1,W_STREET_2,W_CITY,W_STATE,W_ZIP,W_NATIONKEY','/usr/local/splicemachine/demodata/htap-25/warehouse.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'WAREHOUSE','W_ID,W_YTD,W_TAX,W_NAME,W_STREET_1,W_STREET_2,W_CITY,W_STATE,W_ZIP,W_NATIONKEY','/HTAP/1000/warehouse', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'STOCK',
+   'S_W_ID,S_I_ID,S_QUANTITY,S_YTD,S_ORDER_CNT,S_REMOTE_CNT,S_DATA,S_DIST_01,S_DIST_02,S_DIST_03,S_DIST_04,S_DIST_05,S_DIST_06,S_DIST_07,S_DIST_08,S_DIST_09,S_DIST_10,S_SUPPKEY',
+   '/usr/local/splicemachine/demodata/htap-25/stock.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
--- next processing STOCK - requires two step process to add S_SUPPKEY to data file
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'MODSTOCK',
-   'S_W_ID,S_I_ID,S_QUANTITY,S_YTD,S_ORDER_CNT,S_REMOTE_CNT,S_DATA,S_DIST_01,S_DIST_02,S_DIST_03,S_DIST_04,S_DIST_05,S_DIST_06,S_DIST_07,S_DIST_08,S_DIST_09,S_DIST_10',
-   '/HTAP/1000/stock', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
-
-INSERT INTO STOCK SELECT 
-S_W_ID,S_I_ID,S_QUANTITY,S_YTD,S_ORDER_CNT,S_REMOTE_CNT,S_DATA,S_DIST_01,S_DIST_02,S_DIST_03,S_DIST_04,S_DIST_05,S_DIST_06,S_DIST_07,S_DIST_08,S_DIST_09,S_DIST_10,
-MOD((S_W_ID * S_I_ID), 10000) AS S_SUPPKEY FROM MODSTOCK;
-
-DROP TABLE MODSTOCK;
-
--- process remainder of data files
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'CUSTOMER','C_W_ID,C_D_ID,C_ID,C_DISCOUNT,C_CREDIT,C_LAST,C_FIRST,C_CREDIT_LIM,C_BALANCE,C_YTD_PAYMENT,C_PAYMENT_CNT,C_DELIVERY_CNT,C_STREET_1,C_STREET_2,C_CITY,C_STATE,C_ZIP,C_NATIONKEY,C_PHONE,C_SINCE,C_MIDDLE,C_DATA','/HTAP/1000/customer', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'CUSTOMER','C_W_ID,C_D_ID,C_ID,C_DISCOUNT,C_CREDIT,C_LAST,C_FIRST,C_CREDIT_LIM,C_BALANCE,C_YTD_PAYMENT,C_PAYMENT_CNT,C_DELIVERY_CNT,C_STREET_1,C_STREET_2,C_CITY,C_STATE,C_ZIP,C_NATIONKEY,C_PHONE,C_SINCE,C_MIDDLE,C_DATA','/usr/local/splicemachine/demodata/htap-25/customer.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
 call SYSCS_UTIL.IMPORT_DATA (current schema,'DISTRICT',
    'D_W_ID,D_ID,D_YTD,D_TAX,D_NEXT_O_ID,D_NAME,D_STREET_1,D_STREET_2,D_CITY,D_STATE,D_ZIP,D_NATIONKEY',
-   '/HTAP/1000/district', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+   '/usr/local/splicemachine/demodata/htap-25/district.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'HISTORY','H_C_ID,H_C_D_ID,H_C_W_ID,H_D_ID,H_W_ID,H_DATE,H_AMOUNT,H_DATA','/HTAP/1000/history', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'HISTORY','H_C_ID,H_C_D_ID,H_C_W_ID,H_D_ID,H_W_ID,H_DATE,H_AMOUNT,H_DATA','/usr/local/splicemachine/demodata/htap-25/history.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'ITEM','I_ID,I_NAME,I_PRICE,I_DATA,I_IM_ID','/HTAP/1000/item', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'ITEM','I_ID,I_NAME,I_PRICE,I_DATA,I_IM_ID','/usr/local/splicemachine/demodata/htap-25/item.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'NEW_ORDER','NO_W_ID,NO_D_ID,NO_O_ID','/HTAP/1000/new_order', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'NEW_ORDER','NO_W_ID,NO_D_ID,NO_O_ID','/usr/local/splicemachine/demodata/htap-25/new_order.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'OORDER','O_W_ID,O_D_ID,O_ID,O_C_ID,O_CARRIER_ID,O_OL_CNT,O_ALL_LOCAL,O_ENTRY_D','/HTAP/1000/oorder', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'OORDER','O_W_ID,O_D_ID,O_ID,O_C_ID,O_CARRIER_ID,O_OL_CNT,O_ALL_LOCAL,O_ENTRY_D','/usr/local/splicemachine/demodata/htap-25/oorder.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
 call SYSCS_UTIL.IMPORT_DATA (current schema,'ORDER_LINE',
    'OL_W_ID,OL_D_ID,OL_O_ID,OL_NUMBER,OL_I_ID,OL_DELIVERY_D,OL_AMOUNT,OL_SUPPLY_W_ID,OL_QUANTITY,OL_DIST_INFO',
-   '/HTAP/1000/order_line', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+   '/usr/local/splicemachine/demodata/htap-25/order_line.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'REGION','R_REGIONKEY,R_NAME,R_COMMENT','/HTAP/1000/region', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'REGION','R_REGIONKEY,R_NAME,R_COMMENT','/usr/local/splicemachine/demodata/htap-25/region.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'NATION','n_nationkey,n_name,n_regionkey,n_comment','/HTAP/1000/nation', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'NATION','n_nationkey,n_name,n_regionkey,n_comment','/usr/local/splicemachine/demodata/htap-25/nation.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
-call SYSCS_UTIL.IMPORT_DATA (current schema,'SUPPLIER','su_suppkey,su_name,su_address,su_nationkey,su_phone,su_acctbal,su_comment','/HTAP/1000/supplier', null, '''', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/BAD', true, null);
+call SYSCS_UTIL.IMPORT_DATA (current schema,'SUPPLIER','su_suppkey,su_name,su_address,su_nationkey,su_phone,su_acctbal,su_comment','/usr/local/splicemachine/demodata/htap-25/supplier.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
 
 /* Part 4 - optimize database */ 
 
-call SYSCS_UTIL.SYSCS_PERFORM_MAJOR_COMPACTION_ON_SCHEMA('htap1000');
+-- create indexes
+CREATE INDEX IDX_CUSTOMER_NAME ON CUSTOMER (C_W_ID,C_D_ID,C_LAST,C_FIRST);
 
-ANALYZE SCHEMA htap1000;
+CREATE INDEX STOCK_SUPPKEY ON STOCK (S_SUPPKEY, S_I_ID, S_W_ID, S_ORDER_CNT);
+CREATE INDEX STOCK_I_ID ON STOCK (S_I_ID, S_SUPPKEY, S_W_ID, S_QUANTITY);
+CREATE INDEX SUPPLIER_SUPPKEY ON SUPPLIER (SU_SUPPKEY, su_nationkey);
+CREATE INDEX ITEM_ID ON ITEM (I_ID, I_DATA);
+CREATE INDEX OL_I_ID ON ORDER_LINE (OL_I_ID, OL_O_ID, OL_W_ID, OL_D_ID);
+
+-- perform major compaction
+call SYSCS_UTIL.SYSCS_PERFORM_MAJOR_COMPACTION_ON_SCHEMA('htap');
+
+-- build query statistics
+ANALYZE SCHEMA htap;

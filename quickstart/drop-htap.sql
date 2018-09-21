@@ -1,12 +1,14 @@
 /* sql script to drop schema tpcc and chbanchmark data */
 
+elapsedtime on;
+
+connect 'jdbc:splice://localhost:1527/splicedb;user=splice;password=admin';
+
 /* Part 1 - drop view and tables - will move to oltpbench in the future */ 
 
-set schema htap1000;
+set schema htap;
 
 -- temporary table used for processing STOCK data file
-DROP TABLE IF EXISTS MODSTOCK;
-
 DROP VIEW revenue0;
 
 DROP TABLE region;
@@ -25,4 +27,4 @@ DROP TABLE WAREHOUSE;
 
 /* Part 2 - drop usr */ 
 
-call SYSCS_UTIL.SYSCS_DROP_USER('htap1000');
+call SYSCS_UTIL.SYSCS_DROP_USER('htap');

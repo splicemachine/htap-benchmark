@@ -258,12 +258,6 @@ public class Delivery extends TPCCProcedure {
             terminalMessage.append("+-----------------------------------------------------------------+\n\n");
             LOG.trace(terminalMessage.toString());
         }
-        if (LOG.isInfoEnabled()) {
-        	StringBuilder terminalMessage = new StringBuilder();
-            terminalMessage.append("DELIVERY W_ID=" + w_id);
-            LOG.info(terminalMessage.toString());
-        }
-
 	
 		return null;
     }
