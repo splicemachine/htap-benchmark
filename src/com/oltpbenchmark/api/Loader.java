@@ -30,8 +30,7 @@ import com.oltpbenchmark.catalog.Catalog;
 import com.oltpbenchmark.catalog.Column;
 import com.oltpbenchmark.catalog.Table;
 import com.oltpbenchmark.types.DatabaseType;
-import com.oltpbenchmark.util.Histogram;
-import com.oltpbenchmark.util.SQLUtil;
+import com.oltpbenchmark.util.*;
 
 /**
  * @author pavlo
@@ -44,7 +43,9 @@ public abstract class Loader<T extends BenchmarkModule> {
     protected Connection conn;
     protected final WorkloadConfiguration workConf;
     protected final double scaleFactor;
-    protected final int startId;
+    protected final int startId; // provides a starting id for warehouses to allow incremental load of the data set
+    protected final String fileLocation; // if set indicates that data load is via csv with db specific load utilities
+
     private final Histogram<String> tableSizes = new Histogram<String>(true);
 
     /**
@@ -88,6 +89,7 @@ public abstract class Loader<T extends BenchmarkModule> {
         this.workConf = benchmark.getWorkloadConfiguration();
         this.scaleFactor = workConf.getScaleFactor();
         this.startId = workConf.getStartId();
+        this.fileLocation = workConf.getFileLocation();
     }
 
     /**

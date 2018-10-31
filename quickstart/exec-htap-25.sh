@@ -1,9 +1,6 @@
 #!/bin/bash
 echo 'execute htap-25 benchmark'
 
-# change this variable if you installed Splice Machine in a different location
-SPLICE_HOME=/usr/local
-
 pushd ..
 
 # always rebuild - changing DDL or dialect files requires rebuild of oltpbenchmark

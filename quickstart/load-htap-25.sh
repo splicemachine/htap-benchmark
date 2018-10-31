@@ -2,7 +2,7 @@
 echo 'load htap-25'
 
 # change this variable if you installed Splice Machine in a different location
-SPLICE_HOME=/usr/local
+SPLICE_HOME=/usr/local/splicemachine
 
 SPLICE_HOST='localhost'
 SPLICE_PORT='1527'

@@ -38,6 +38,7 @@ public class Stock implements Serializable {
 	public String s_dist_08;
 	public String s_dist_09;
 	public String s_dist_10;
+	public int s_suppkey;
 
 	@Override
 	public String toString() {
@@ -75,7 +76,12 @@ public class Stock implements Serializable {
 				+ "\n*    s_dist_08 = "
 				+ s_dist_08
 				+ "\n*    s_dist_09 = "
-				+ s_dist_09 + "\n*    s_dist_10 = " + s_dist_10 + "\n**********************************************");
+				+ s_dist_09
+				+ "\n*    s_dist_10 = " 
+				+ s_dist_10
+				+ "\n*    s_suppkey = "
+				+ s_suppkey
+				+ "\n**********************************************");
 	}
 
 } // end Stock

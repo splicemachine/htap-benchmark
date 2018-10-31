@@ -49,7 +49,8 @@ public class WorkloadConfiguration {
 	private String db_password;
 	private String db_driver;	
 	private double scaleFactor = 1.0;
-	private int startId = 1;
+	private String fileLocation; // file directory for creating csvs for tpcc and chbenchmark
+	private int startId; // start id for warehouses for incremental load of tpcc
 	private double selectivity = -1.0;
 	private int terminals;
 	private int loaderThreads = ThreadUtil.availableProcessors();
@@ -198,6 +199,23 @@ public class WorkloadConfiguration {
 	public double getScaleFactor() {
         return this.scaleFactor;
     }
+
+	/**
+	 * Set the file location for csvs for tpcc / chbenchmark data load via csv
+	 * @return
+	 */
+	public void setFileLocation(String fileLocation) {
+		this.fileLocation = fileLocation;
+	}
+
+	/**
+	 * Return the directory for creating csv file in tpcc / chbenchmark data load
+	 * returns null if load is to be done directly
+	 * @return
+	 */
+	public String getFileLocation() {
+		return fileLocation;
+	}
 
 	/**
 	 * Set the start id for warehouses

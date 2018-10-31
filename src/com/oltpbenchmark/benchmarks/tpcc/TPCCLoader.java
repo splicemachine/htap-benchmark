@@ -43,6 +43,8 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.io.*;
+import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Logger;
 
@@ -58,6 +60,11 @@ import com.oltpbenchmark.util.SQLUtil;
 public class TPCCLoader extends Loader<TPCCBenchmark> {
     private static final Logger LOG = Logger.getLogger(TPCCLoader.class);
 
+	// create file name for current csv
+	private String fileName(String table, int warehouseId) {
+		return String.format("%s/%s-%06d.csv", fileLocation, table, warehouseId);
+	}
+	
 	//create possible keys for nationkey ([a-zA-Z0-9])
 	private static final int[] nationkeys = new int[62];
 	static {
@@ -79,6 +86,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
             //where would be fun in that?
             numWarehouses = 1;
         }
+        LOG.debug("startid: " + this.startId + " filelocation: " + this.fileLocation);
     }
 
     private int numWarehouses = 0;
@@ -96,8 +104,11 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         threads.add(new LoaderThread() {
         	@Override
         	public void load(Connection conn) throws SQLException {
-        		if (doItemLoad) 
+        		if (doItemLoad) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Starting to load ITEM");
+
         			loadItems(conn, TPCCConfig.configItemCount);
+        		}
         		itemLatch.countDown();
         	}
         });
@@ -174,6 +185,18 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         int len = 0;
         int startORIGINAL = 0;
         boolean fail = false;
+        PrintWriter itemPrntWr = null;
+        
+        LOG.info("Loading ITEM");
+
+        if (fileLocation != null) {
+			try { 
+				itemPrntWr = new PrintWriter(fileLocation + "/" + "item.csv");
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 
         try {
             PreparedStatement itemPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_ITEM);
@@ -206,26 +229,46 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
                 k++;
 
-                int idx = 1;
-                itemPrepStmt.setLong(idx++, item.i_id);
-                itemPrepStmt.setString(idx++, item.i_name);
-                itemPrepStmt.setDouble(idx++, item.i_price);
-                itemPrepStmt.setString(idx++, item.i_data);
-                itemPrepStmt.setLong(idx++, item.i_im_id);
-                itemPrepStmt.addBatch();
+            	int idx = 1;
+                if (itemPrntWr == null) {
+                	itemPrepStmt.setLong(idx++, item.i_id);
+                	itemPrepStmt.setString(idx++, item.i_name);
+                	itemPrepStmt.setDouble(idx++, item.i_price);
+                	itemPrepStmt.setString(idx++, item.i_data);
+                	itemPrepStmt.setLong(idx++, item.i_im_id);
+                	itemPrepStmt.addBatch();
+                } else {
+                	itemPrntWr.printf("%d,", item.i_id);
+                	itemPrntWr.printf("%s,", item.i_name);
+                	itemPrntWr.printf("%.2f,", item.i_price);
+                	itemPrntWr.printf("%s,", item.i_data);
+                	itemPrntWr.printf("%d", item.i_im_id);
+                	itemPrntWr.println();
+                }
                 batchSize++;
 
                 if (batchSize == TPCCConfig.configCommitCount) {
-                    itemPrepStmt.executeBatch();
-                    itemPrepStmt.clearBatch();
-                    transCommit(conn);
+                	if (itemPrntWr == null) {
+                        itemPrepStmt.executeBatch();
+                        itemPrepStmt.clearBatch();
+                        transCommit(conn);                		
+                	} else {
+                		itemPrntWr.flush();
+                	}
                     batchSize = 0;
                 }
             } // end for
 
 
-            if (batchSize > 0) itemPrepStmt.executeBatch();
-            transCommit(conn);
+            if (batchSize > 0) {
+            	if (itemPrntWr == null) {
+            		itemPrepStmt.executeBatch();
+                    transCommit(conn);
+            	} else {
+            		itemPrntWr.flush();
+            		itemPrntWr.close();
+            	}
+            }            
 
         } catch (BatchUpdateException ex) {
             SQLException next = ex.getNextException();
@@ -252,6 +295,16 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
     } // end loadItem()
 
     protected int loadWarehouse(Connection conn, int w_id) {
+        PrintWriter whsePrntWr = null;
+        
+        if (fileLocation != null) {
+			try { 
+				whsePrntWr = new PrintWriter(fileName("warehouse", w_id));
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 
         try {
             PreparedStatement whsePrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_WAREHOUSE);
@@ -271,19 +324,35 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			warehouse.w_nationkey = nationkeys[TPCCUtil.randomNumber(0, 61, benchmark.rng())];
 
 			int idx = 1;
-			whsePrepStmt.setLong(idx++, warehouse.w_id);
-			whsePrepStmt.setDouble(idx++, warehouse.w_ytd);
-			whsePrepStmt.setDouble(idx++, warehouse.w_tax);
-			whsePrepStmt.setString(idx++, warehouse.w_name);
-			whsePrepStmt.setString(idx++, warehouse.w_street_1);
-			whsePrepStmt.setString(idx++, warehouse.w_street_2);
-			whsePrepStmt.setString(idx++, warehouse.w_city);
-			whsePrepStmt.setString(idx++, warehouse.w_state);
-			whsePrepStmt.setString(idx++, warehouse.w_zip);
-			whsePrepStmt.setInt(idx++, warehouse.w_nationkey);
-			whsePrepStmt.execute();
+			if (whsePrntWr == null) {
+				whsePrepStmt.setLong(idx++, warehouse.w_id);
+				whsePrepStmt.setDouble(idx++, warehouse.w_ytd);
+				whsePrepStmt.setDouble(idx++, warehouse.w_tax);
+				whsePrepStmt.setString(idx++, warehouse.w_name);
+				whsePrepStmt.setString(idx++, warehouse.w_street_1);
+				whsePrepStmt.setString(idx++, warehouse.w_street_2);
+				whsePrepStmt.setString(idx++, warehouse.w_city);
+				whsePrepStmt.setString(idx++, warehouse.w_state);
+				whsePrepStmt.setString(idx++, warehouse.w_zip);
+				whsePrepStmt.setInt(idx++, warehouse.w_nationkey);
+				whsePrepStmt.execute();				
+				transCommit(conn);
+			} else {
+				whsePrntWr.printf("%d,", warehouse.w_id);
+				whsePrntWr.printf("%.2f,", warehouse.w_ytd);
+				whsePrntWr.printf("%.4f,", warehouse.w_tax);
+				whsePrntWr.printf("%s,", warehouse.w_name);
+				whsePrntWr.printf("%s,", warehouse.w_street_1);
+				whsePrntWr.printf("%s,", warehouse.w_street_2);
+				whsePrntWr.printf("%s,", warehouse.w_city);
+				whsePrntWr.printf("%s,", warehouse.w_state);
+				whsePrntWr.printf("%s,", warehouse.w_zip);
+				whsePrntWr.printf("%d", warehouse.w_nationkey);
+				whsePrntWr.println();
+				whsePrntWr.flush();
+				whsePrntWr.close();
+			}
 
-			transCommit(conn);
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
 			transRollback(conn);
@@ -302,6 +371,18 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 		int randPct = 0;
 		int len = 0;
 		int startORIGINAL = 0;
+		
+        PrintWriter stckPrntWr = null;
+        
+        if (fileLocation != null) {
+			try { 
+				stckPrntWr = new PrintWriter(fileName("stock", w_id));
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
+
 		try {
 		    PreparedStatement stckPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_STOCK);
 
@@ -330,36 +411,72 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 							+ "ORIGINAL"
 							+ TPCCUtil.randomStr(len - startORIGINAL - 9);
 				}
+				
+				// supplier key
+				stock.s_suppkey = (stock.s_w_id * stock.s_i_id) % 10000; // MOD((S_W_ID * S_I_ID), 10000)
 
 				k++;
 				int idx = 1;
-				stckPrepStmt.setLong(idx++, stock.s_w_id);
-				stckPrepStmt.setLong(idx++, stock.s_i_id);
-				stckPrepStmt.setLong(idx++, stock.s_quantity);
-				stckPrepStmt.setDouble(idx++, stock.s_ytd);
-				stckPrepStmt.setLong(idx++, stock.s_order_cnt);
-				stckPrepStmt.setLong(idx++, stock.s_remote_cnt);
-				stckPrepStmt.setString(idx++, stock.s_data);
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
-				stckPrepStmt.addBatch();
+				if (stckPrntWr == null) {
+					stckPrepStmt.setLong(idx++, stock.s_w_id);
+					stckPrepStmt.setLong(idx++, stock.s_i_id);
+					stckPrepStmt.setLong(idx++, stock.s_quantity);
+					stckPrepStmt.setDouble(idx++, stock.s_ytd);
+					stckPrepStmt.setLong(idx++, stock.s_order_cnt);
+					stckPrepStmt.setLong(idx++, stock.s_remote_cnt);
+					stckPrepStmt.setString(idx++, stock.s_data);
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setString(idx++, TPCCUtil.randomStr(24));
+					stckPrepStmt.setLong(idx++, stock.s_suppkey);
+					stckPrepStmt.addBatch();					
+				} else {
+					stckPrntWr.printf("%d,", stock.s_w_id);
+					stckPrntWr.printf("%d,", stock.s_i_id);
+					stckPrntWr.printf("%d,", stock.s_quantity);
+					stckPrntWr.printf("%.2f,", stock.s_ytd);
+					stckPrntWr.printf("%d,", stock.s_order_cnt);
+					stckPrntWr.printf("%d,", stock.s_remote_cnt);
+					stckPrntWr.printf("%s,", stock.s_data);
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%s,", TPCCUtil.randomStr(24));
+					stckPrntWr.printf("%d", stock.s_suppkey);
+					stckPrntWr.println();					
+				}
+				
 				if ((k % TPCCConfig.configCommitCount) == 0) {
-					stckPrepStmt.executeBatch();
-					stckPrepStmt.clearBatch();
-					transCommit(conn);
+					if (stckPrntWr == null) {
+						stckPrepStmt.executeBatch();
+						stckPrepStmt.clearBatch();
+						transCommit(conn);
+					} else {
+						stckPrntWr.flush();
+					}
 				}
 			} // end for [i]
 
-			stckPrepStmt.executeBatch();
-			transCommit(conn);
+			if (stckPrntWr == null) {
+				stckPrepStmt.executeBatch();
+				transCommit(conn);
+			} else {
+				stckPrntWr.flush();
+				stckPrntWr.close();
+			}
 
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
@@ -377,6 +494,17 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 	protected int loadDistricts(Connection conn, int w_id, int distWhseKount) {
 
 		int k = 0;
+
+        PrintWriter distPrntWr = null;
+        
+        if (fileLocation != null) {
+			try { 
+				distPrntWr = new PrintWriter(fileName("district", w_id));
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 
 		try {
 
@@ -402,22 +530,43 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 				k++;
 				int idx = 1;
-				distPrepStmt.setLong(idx++, district.d_w_id);
-				distPrepStmt.setLong(idx++, district.d_id);
-				distPrepStmt.setDouble(idx++, district.d_ytd);
-				distPrepStmt.setDouble(idx++, district.d_tax);
-				distPrepStmt.setLong(idx++, district.d_next_o_id);
-				distPrepStmt.setString(idx++, district.d_name);
-				distPrepStmt.setString(idx++, district.d_street_1);
-				distPrepStmt.setString(idx++, district.d_street_2);
-				distPrepStmt.setString(idx++, district.d_city);
-				distPrepStmt.setString(idx++, district.d_state);
-				distPrepStmt.setString(idx++, district.d_zip);
-				distPrepStmt.setInt(idx++, district.d_nationkey);
-				distPrepStmt.executeUpdate();
+				if (distPrntWr == null) {
+					distPrepStmt.setLong(idx++, district.d_w_id);
+					distPrepStmt.setLong(idx++, district.d_id);
+					distPrepStmt.setDouble(idx++, district.d_ytd);
+					distPrepStmt.setDouble(idx++, district.d_tax);
+					distPrepStmt.setLong(idx++, district.d_next_o_id);
+					distPrepStmt.setString(idx++, district.d_name);
+					distPrepStmt.setString(idx++, district.d_street_1);
+					distPrepStmt.setString(idx++, district.d_street_2);
+					distPrepStmt.setString(idx++, district.d_city);
+					distPrepStmt.setString(idx++, district.d_state);
+					distPrepStmt.setString(idx++, district.d_zip);
+					distPrepStmt.setInt(idx++, district.d_nationkey);
+					distPrepStmt.executeUpdate();
+				} else {
+					distPrntWr.printf("%d,", district.d_w_id);
+					distPrntWr.printf("%d,", district.d_id);
+					distPrntWr.printf("%.2f,", district.d_ytd);
+					distPrntWr.printf("%.4f,", district.d_tax);
+					distPrntWr.printf("%d,", district.d_next_o_id);
+					distPrntWr.printf("%s,", district.d_name);
+					distPrntWr.printf("%s,", district.d_street_1);
+					distPrntWr.printf("%s,", district.d_street_2);
+					distPrntWr.printf("%s,", district.d_city);
+					distPrntWr.printf("%s,", district.d_state);
+					distPrntWr.printf("%s,", district.d_zip);
+					distPrntWr.printf("%d", district.d_nationkey);
+					distPrntWr.println();					
+				}
 			} // end for [d]
 
-			transCommit(conn);
+			if (distPrntWr == null) {
+				transCommit(conn);
+			} else {
+				distPrntWr.flush();
+				distPrntWr.close();
+			}
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
 			transRollback(conn);
@@ -433,6 +582,20 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 	protected int loadCustomers(Connection conn, int w_id, int districtsPerWarehouse, int customersPerDistrict) {
 
 		int k = 0;
+
+        PrintWriter custPrntWr = null;
+        PrintWriter histPrntWr = null;
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
+        if (fileLocation != null) {
+			try { 
+				custPrntWr = new PrintWriter(fileName("customer", w_id));
+				histPrntWr = new PrintWriter(fileName("history", w_id));				
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 
 		Customer customer = new Customer();
 		History history = new History();
@@ -495,56 +658,106 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 					k = k + 2;
 					int idx = 1;
-					custPrepStmt.setLong(idx++, customer.c_w_id);
-					custPrepStmt.setLong(idx++, customer.c_d_id);
-					custPrepStmt.setLong(idx++, customer.c_id);
-					custPrepStmt.setDouble(idx++, customer.c_discount);
-					custPrepStmt.setString(idx++, customer.c_credit);
-					custPrepStmt.setString(idx++, customer.c_last);
-					custPrepStmt.setString(idx++, customer.c_first);
-					custPrepStmt.setDouble(idx++, customer.c_credit_lim);
-					custPrepStmt.setDouble(idx++, customer.c_balance);
-					custPrepStmt.setDouble(idx++, customer.c_ytd_payment);
-					custPrepStmt.setLong(idx++, customer.c_payment_cnt);
-					custPrepStmt.setLong(idx++, customer.c_delivery_cnt);
-					custPrepStmt.setString(idx++, customer.c_street_1);
-					custPrepStmt.setString(idx++, customer.c_street_2);
-					custPrepStmt.setString(idx++, customer.c_city);
-					custPrepStmt.setString(idx++, customer.c_state);
-					custPrepStmt.setString(idx++, customer.c_zip);
-					custPrepStmt.setInt(idx++, customer.c_nationkey);
-					custPrepStmt.setString(idx++, customer.c_phone);
-					custPrepStmt.setTimestamp(idx++, customer.c_since);
-					custPrepStmt.setString(idx++, customer.c_middle);
-					custPrepStmt.setString(idx++, customer.c_data);
-					custPrepStmt.addBatch();
+					if (custPrntWr == null) {
+						custPrepStmt.setLong(idx++, customer.c_w_id);
+						custPrepStmt.setLong(idx++, customer.c_d_id);
+						custPrepStmt.setLong(idx++, customer.c_id);
+						custPrepStmt.setDouble(idx++, customer.c_discount);
+						custPrepStmt.setString(idx++, customer.c_credit);
+						custPrepStmt.setString(idx++, customer.c_last);
+						custPrepStmt.setString(idx++, customer.c_first);
+						custPrepStmt.setDouble(idx++, customer.c_credit_lim);
+						custPrepStmt.setDouble(idx++, customer.c_balance);
+						custPrepStmt.setDouble(idx++, customer.c_ytd_payment);
+						custPrepStmt.setLong(idx++, customer.c_payment_cnt);
+						custPrepStmt.setLong(idx++, customer.c_delivery_cnt);
+						custPrepStmt.setString(idx++, customer.c_street_1);
+						custPrepStmt.setString(idx++, customer.c_street_2);
+						custPrepStmt.setString(idx++, customer.c_city);
+						custPrepStmt.setString(idx++, customer.c_state);
+						custPrepStmt.setString(idx++, customer.c_zip);
+						custPrepStmt.setInt(idx++, customer.c_nationkey);
+						custPrepStmt.setString(idx++, customer.c_phone);
+						custPrepStmt.setTimestamp(idx++, customer.c_since);
+						custPrepStmt.setString(idx++, customer.c_middle);
+						custPrepStmt.setString(idx++, customer.c_data);
+						custPrepStmt.addBatch();
+					} else {
+						custPrntWr.printf("%d,", customer.c_w_id);
+						custPrntWr.printf("%d,", customer.c_d_id);
+						custPrntWr.printf("%d,", customer.c_id);
+						custPrntWr.printf("%.4f,", customer.c_discount);
+						custPrntWr.printf("%s,", customer.c_credit);
+						custPrntWr.printf("%s,", customer.c_last);
+						custPrntWr.printf("%s,", customer.c_first);
+						custPrntWr.printf("%.2f,", customer.c_credit_lim);
+						custPrntWr.printf("%.2f,", customer.c_balance);
+						custPrntWr.printf("%.2f,", customer.c_ytd_payment);
+						custPrntWr.printf("%d,", customer.c_payment_cnt);
+						custPrntWr.printf("%d,", customer.c_delivery_cnt);
+						custPrntWr.printf("%s,", customer.c_street_1);
+						custPrntWr.printf("%s,", customer.c_street_2);
+						custPrntWr.printf("%s,", customer.c_city);
+						custPrntWr.printf("%s,", customer.c_state);
+						custPrntWr.printf("%s,", customer.c_zip);
+						custPrntWr.printf("%d,", customer.c_nationkey);
+						custPrntWr.printf("%s,", customer.c_phone);
+						custPrntWr.printf("%s,", dateFormat.format(customer.c_since.getTime()));
+						custPrntWr.printf("%s,", customer.c_middle);
+						custPrntWr.printf("%s", customer.c_data);
+						custPrntWr.println();
+					}
 
 					idx = 1;
-					histPrepStmt.setInt(idx++, history.h_c_id);
-					histPrepStmt.setInt(idx++, history.h_c_d_id);
-					histPrepStmt.setInt(idx++, history.h_c_w_id);
-					histPrepStmt.setInt(idx++, history.h_d_id);
-					histPrepStmt.setInt(idx++, history.h_w_id);
-					histPrepStmt.setTimestamp(idx++, history.h_date);
-					histPrepStmt.setDouble(idx++, history.h_amount);
-					histPrepStmt.setString(idx++, history.h_data);
-					histPrepStmt.addBatch();
+					if (histPrntWr == null) {
+						histPrepStmt.setInt(idx++, history.h_c_id);
+						histPrepStmt.setInt(idx++, history.h_c_d_id);
+						histPrepStmt.setInt(idx++, history.h_c_w_id);
+						histPrepStmt.setInt(idx++, history.h_d_id);
+						histPrepStmt.setInt(idx++, history.h_w_id);
+						histPrepStmt.setTimestamp(idx++, history.h_date);
+						histPrepStmt.setDouble(idx++, history.h_amount);
+						histPrepStmt.setString(idx++, history.h_data);
+						histPrepStmt.addBatch();
+					} else {
+						histPrntWr.printf("%d,", history.h_c_id);
+						histPrntWr.printf("%d,", history.h_c_d_id);
+						histPrntWr.printf("%d,", history.h_c_w_id);
+						histPrntWr.printf("%d,", history.h_d_id);
+						histPrntWr.printf("%d,", history.h_w_id);
+						histPrntWr.printf("%s,", dateFormat.format(history.h_date.getTime()));
+						histPrntWr.printf("%.2f,", history.h_amount);
+						histPrntWr.printf("%s", history.h_data);
+						histPrntWr.println();
+					}
 
 					if ((k % TPCCConfig.configCommitCount) == 0) {
-						custPrepStmt.executeBatch();
-						histPrepStmt.executeBatch();
-						custPrepStmt.clearBatch();
-						custPrepStmt.clearBatch();
-						transCommit(conn);
+						if (custPrntWr == null) {
+							custPrepStmt.executeBatch();
+							histPrepStmt.executeBatch();
+							custPrepStmt.clearBatch();
+							custPrepStmt.clearBatch();
+							transCommit(conn);
+						} else {
+							custPrntWr.flush();
+							histPrntWr.flush();
+						}
 					}
 				} // end for [c]
 			} // end for [d]
 
-			custPrepStmt.executeBatch();
-			histPrepStmt.executeBatch();
-			custPrepStmt.clearBatch();
-			histPrepStmt.clearBatch();
-			transCommit(conn);
+			if (custPrntWr == null) {
+				custPrepStmt.executeBatch();
+				histPrepStmt.executeBatch();
+				custPrepStmt.clearBatch();
+				histPrepStmt.clearBatch();
+				transCommit(conn);
+			} else {
+				custPrntWr.flush();
+				histPrntWr.flush();
+				custPrntWr.close();
+				histPrntWr.close();
+			}
 
 		} catch (SQLException se) {
 			LOG.debug(se.getMessage());
@@ -562,6 +775,23 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 		int k = 0;
 		int t = 0;
+		
+        PrintWriter ordrPrntWr = null;
+        PrintWriter nworPrntWr = null;
+        PrintWriter orlnPrntWr = null;
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
+        if (fileLocation != null) {
+			try { 
+				ordrPrntWr = new PrintWriter(fileName("oorder", w_id));
+				nworPrntWr = new PrintWriter(fileName("new_order", w_id));
+				orlnPrntWr = new PrintWriter(fileName("order_line", w_id));
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
+
 		try {
 		    PreparedStatement ordrPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_OPENORDER);
 		    PreparedStatement nworPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_NEWORDER);
@@ -608,19 +838,35 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 					k++;
 					int idx = 1;
-					ordrPrepStmt.setInt(idx++, oorder.o_w_id);
-		            ordrPrepStmt.setInt(idx++, oorder.o_d_id);
-		            ordrPrepStmt.setInt(idx++, oorder.o_id);
-		            ordrPrepStmt.setInt(idx++, oorder.o_c_id);
-		            if (oorder.o_carrier_id != null) {
-		                ordrPrepStmt.setInt(idx++, oorder.o_carrier_id);
-		            } else {
-		                ordrPrepStmt.setNull(idx++, Types.INTEGER);
-		            }
-		            ordrPrepStmt.setInt(idx++, oorder.o_ol_cnt);
-		            ordrPrepStmt.setInt(idx++, oorder.o_all_local);
-		            ordrPrepStmt.setTimestamp(idx++, oorder.o_entry_d);
-		            ordrPrepStmt.addBatch();
+					if (ordrPrntWr == null) {
+						ordrPrepStmt.setInt(idx++, oorder.o_w_id);
+			            ordrPrepStmt.setInt(idx++, oorder.o_d_id);
+			            ordrPrepStmt.setInt(idx++, oorder.o_id);
+			            ordrPrepStmt.setInt(idx++, oorder.o_c_id);
+			            if (oorder.o_carrier_id != null) {
+			                ordrPrepStmt.setInt(idx++, oorder.o_carrier_id);
+			            } else {
+			                ordrPrepStmt.setNull(idx++, Types.INTEGER);
+			            }
+			            ordrPrepStmt.setInt(idx++, oorder.o_ol_cnt);
+			            ordrPrepStmt.setInt(idx++, oorder.o_all_local);
+			            ordrPrepStmt.setTimestamp(idx++, oorder.o_entry_d);
+			            ordrPrepStmt.addBatch();						
+					} else {
+						ordrPrntWr.printf("%d,", oorder.o_w_id);
+			            ordrPrntWr.printf("%d,", oorder.o_d_id);
+			            ordrPrntWr.printf("%d,", oorder.o_id);
+			            ordrPrntWr.printf("%d,", oorder.o_c_id);
+			            if (oorder.o_carrier_id != null) {
+			                ordrPrntWr.printf("%d,", oorder.o_carrier_id);
+			            } else {
+			                ordrPrntWr.printf("null,");
+			            }
+			            ordrPrntWr.printf("%d,", oorder.o_ol_cnt);
+			            ordrPrntWr.printf("%d,", oorder.o_all_local);
+						ordrPrntWr.printf("%s", dateFormat.format(oorder.o_entry_d.getTime()));
+			            ordrPrntWr.println();
+					}
 
 					// 900 rows in the NEW-ORDER table corresponding to the last
 					// 900 rows in the ORDER table for that district (i.e.,
@@ -632,10 +878,17 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 						k++;
 						idx = 1;
-				        nworPrepStmt.setInt(idx++, new_order.no_w_id);
-			            nworPrepStmt.setInt(idx++, new_order.no_d_id);
-				        nworPrepStmt.setInt(idx++, new_order.no_o_id);
-			            nworPrepStmt.addBatch();
+						if (nworPrntWr == null) {
+					        nworPrepStmt.setInt(idx++, new_order.no_w_id);
+				            nworPrepStmt.setInt(idx++, new_order.no_d_id);
+					        nworPrepStmt.setInt(idx++, new_order.no_o_id);
+				            nworPrepStmt.addBatch();							
+						} else {
+					        nworPrntWr.printf("%d,", new_order.no_w_id);
+				            nworPrntWr.printf("%d,", new_order.no_d_id);
+					        nworPrntWr.printf("%d", new_order.no_o_id);
+				            nworPrntWr.println();
+						}
 						newOrderBatch++;
 					} // end new order
 
@@ -660,35 +913,62 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 						k++;
 						idx = 1;
-						orlnPrepStmt.setInt(idx++, order_line.ol_w_id);
-			            orlnPrepStmt.setInt(idx++, order_line.ol_d_id);
-			            orlnPrepStmt.setInt(idx++, order_line.ol_o_id);
-			            orlnPrepStmt.setInt(idx++, order_line.ol_number);
-			            orlnPrepStmt.setLong(idx++, order_line.ol_i_id);
-			            if (order_line.ol_delivery_d != null) {
-			                orlnPrepStmt.setTimestamp(idx++, order_line.ol_delivery_d);
-			            } else {
-//			                orlnPrepStmt.setNull(idx++, 0);
-			                orlnPrepStmt.setTimestamp(idx++, null);
-			            }
-			            orlnPrepStmt.setDouble(idx++, order_line.ol_amount);
-			            orlnPrepStmt.setLong(idx++, order_line.ol_supply_w_id);
-			            orlnPrepStmt.setDouble(idx++, order_line.ol_quantity);
-			            orlnPrepStmt.setString(idx++, order_line.ol_dist_info);
-			            orlnPrepStmt.addBatch();
+						if (orlnPrntWr == null) {
+							orlnPrepStmt.setInt(idx++, order_line.ol_w_id);
+				            orlnPrepStmt.setInt(idx++, order_line.ol_d_id);
+				            orlnPrepStmt.setInt(idx++, order_line.ol_o_id);
+				            orlnPrepStmt.setInt(idx++, order_line.ol_number);
+				            orlnPrepStmt.setLong(idx++, order_line.ol_i_id);
+				            if (order_line.ol_delivery_d != null) {
+				                orlnPrepStmt.setTimestamp(idx++, order_line.ol_delivery_d);
+				            } else {
+//				                orlnPrepStmt.setNull(idx++, 0);
+				                orlnPrepStmt.setTimestamp(idx++, null);
+				            }
+				            orlnPrepStmt.setDouble(idx++, order_line.ol_amount);
+				            orlnPrepStmt.setLong(idx++, order_line.ol_supply_w_id);
+				            orlnPrepStmt.setDouble(idx++, order_line.ol_quantity);
+				            orlnPrepStmt.setString(idx++, order_line.ol_dist_info);
+				            orlnPrepStmt.addBatch();
+						} else {
+							orlnPrntWr.printf("%d,", order_line.ol_w_id);
+				            orlnPrntWr.printf("%d,", order_line.ol_d_id);
+				            orlnPrntWr.printf("%d,", order_line.ol_o_id);
+				            orlnPrntWr.printf("%d,", order_line.ol_number);
+				            orlnPrntWr.printf("%d,", order_line.ol_i_id);
+				            if (order_line.ol_delivery_d != null) {
+				                orlnPrntWr.printf("%s,", dateFormat.format(order_line.ol_delivery_d.getTime()));
+				            } else {
+				                orlnPrntWr.printf("null,");
+				            }
+				            orlnPrntWr.printf("%.2f,", order_line.ol_amount);
+				            orlnPrntWr.printf("%d,", order_line.ol_supply_w_id);
+				            orlnPrntWr.printf("%d,", order_line.ol_quantity);
+				            orlnPrntWr.printf("%s", order_line.ol_dist_info);
+				            orlnPrntWr.println();
+						}
 
 						if ((k % TPCCConfig.configCommitCount) == 0) {
-							ordrPrepStmt.executeBatch();
-							if (newOrderBatch > 0) {
-							    nworPrepStmt.executeBatch();
-							    newOrderBatch = 0;
-							}
-							orlnPrepStmt.executeBatch();
+							if (ordrPrntWr == null) {
+								ordrPrepStmt.executeBatch();
+								if (newOrderBatch > 0) {
+								    nworPrepStmt.executeBatch();
+								    newOrderBatch = 0;
+								}
+								orlnPrepStmt.executeBatch();
 
-							ordrPrepStmt.clearBatch();
-							nworPrepStmt.clearBatch();
-							orlnPrepStmt.clearBatch();
-							transCommit(conn);
+								ordrPrepStmt.clearBatch();
+								nworPrepStmt.clearBatch();
+								orlnPrepStmt.clearBatch();
+								transCommit(conn);
+							} else {
+								ordrPrntWr.flush();
+								if (newOrderBatch > 0) {
+								    nworPrntWr.flush();
+								    newOrderBatch = 0;
+								}
+								orlnPrntWr.flush();
+							}
 						}
 
 					} // end for [l]
@@ -699,10 +979,19 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 
 			if (LOG.isDebugEnabled())  LOG.debug("  Writing final records " + k + " of " + t);
-		    ordrPrepStmt.executeBatch();
-		    nworPrepStmt.executeBatch();
-		    orlnPrepStmt.executeBatch();
-			transCommit(conn);
+			if (ordrPrntWr == null) {
+			    ordrPrepStmt.executeBatch();
+			    nworPrepStmt.executeBatch();
+			    orlnPrepStmt.executeBatch();
+				transCommit(conn);
+			} else {
+			    ordrPrntWr.flush();
+			    nworPrntWr.flush();
+			    orlnPrntWr.flush();
+			    ordrPrntWr.close();
+			    nworPrntWr.close();
+			    orlnPrntWr.close();
+			}
 
         } catch (SQLException se) {
             LOG.debug(se.getMessage());

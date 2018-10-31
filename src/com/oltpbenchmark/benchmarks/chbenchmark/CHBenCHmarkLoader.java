@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -76,31 +77,33 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 	}
 
 	public void load() throws SQLException {
-		try {
-			regionPrepStmt = conn.prepareStatement("INSERT INTO region "
-					+ " (r_regionkey, r_name, r_comment) "
-					+ "VALUES (?, ?, ?)");
+		if (startId == 1) {
+			try {
+				regionPrepStmt = conn.prepareStatement("INSERT INTO region "
+						+ " (r_regionkey, r_name, r_comment) "
+						+ "VALUES (?, ?, ?)");
+				
+				nationPrepStmt = conn.prepareStatement("INSERT INTO nation "
+						+ " (n_nationkey, n_name, n_regionkey, n_comment) "
+						+ "VALUES (?, ?, ?, ?)");
+				
+				supplierPrepStmt = conn.prepareStatement("INSERT INTO supplier "
+						+ " (su_suppkey, su_name, su_address, su_nationkey, su_phone, su_acctbal, su_comment) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+			} catch (SQLException se) {
+				LOG.debug(se.getMessage());
+				conn.rollback();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				conn.rollback();
+
+			} // end try
 			
-			nationPrepStmt = conn.prepareStatement("INSERT INTO nation "
-					+ " (n_nationkey, n_name, n_regionkey, n_comment) "
-					+ "VALUES (?, ?, ?, ?)");
-			
-			supplierPrepStmt = conn.prepareStatement("INSERT INTO supplier "
-					+ " (su_suppkey, su_name, su_address, su_nationkey, su_phone, su_acctbal, su_comment) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
-
-		} catch (SQLException se) {
-			LOG.debug(se.getMessage());
-			conn.rollback();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			conn.rollback();
-
-		} // end try
-		
-		loadHelper();
-		conn.commit();
+			loadHelper();
+			conn.commit();
+		}
 	}
 	
    static void truncateTable(String strTable) throws SQLException {
@@ -115,12 +118,22 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
         }
    }
 	
-	static int loadRegions() throws SQLException {
+	protected int loadRegions() throws SQLException {
 		
 		int k = 0;
 		int t = 0;
 		BufferedReader br = null;
+        PrintWriter regionPrntWr = null;
 		
+        if (fileLocation != null) {
+			try { 
+				regionPrntWr = new PrintWriter(fileLocation + "/" + "region.csv");
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
+
 		try {
 		    
 		    truncateTable("region");
@@ -148,10 +161,17 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 
 				k++;
 
-				regionPrepStmt.setLong(1, region.r_regionkey);
-				regionPrepStmt.setString(2, region.r_name);
-				regionPrepStmt.setString(3, region.r_comment);
-				regionPrepStmt.addBatch();
+				if (regionPrntWr == null) {
+					regionPrepStmt.setLong(1, region.r_regionkey);
+					regionPrepStmt.setString(2, region.r_name);
+					regionPrepStmt.setString(3, region.r_comment);
+					regionPrepStmt.addBatch();
+				} else {
+					regionPrntWr.printf("%d,", region.r_regionkey);
+					regionPrntWr.printf("%s,", region.r_name);
+					regionPrntWr.printf("%s", region.r_comment);
+					regionPrntWr.println();
+				}
 
 				long tmpTime = new java.util.Date().getTime();
 				String etStr = "  Elasped Time(ms): "
@@ -160,9 +180,13 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 				LOG.debug(etStr.substring(0, 30)
 						+ "  Writing record " + k + " of " + t);
 				lastTimeMS = tmpTime;
-				regionPrepStmt.executeBatch();
-				regionPrepStmt.clearBatch();
-				conn.commit();
+				if (regionPrntWr == null) {
+					regionPrepStmt.executeBatch();
+					regionPrepStmt.clearBatch();
+					conn.commit();
+				} else {
+					regionPrntWr.flush();
+				}
 				line = br.readLine();
 			}
 
@@ -174,9 +198,11 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 					+ " of " + t);
 			lastTimeMS = tmpTime;
 
-			regionPrepStmt.executeBatch();
-
-			conn.commit();
+			if (regionPrntWr == null) {
+				// nothing to do since batch already executed and committed
+			} else {
+				regionPrntWr.close();
+			}
 			now = new java.util.Date();
 			LOG.debug("End Region Load @  " + now);
 
@@ -203,11 +229,21 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 
 	} // end loadRegions()
 	
-	static int loadNations() throws SQLException {
+	protected int loadNations() throws SQLException {
 		
 		int k = 0;
 		int t = 0;
 		BufferedReader br = null;
+        PrintWriter nationPrntWr = null;
+		
+        if (fileLocation != null) {
+			try { 
+				nationPrntWr = new PrintWriter(fileLocation + "/" + "nation.csv");
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 		
 		try {
 
@@ -234,11 +270,19 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 
 				k++;
 
-				nationPrepStmt.setLong(1, nation.n_nationkey);
-				nationPrepStmt.setString(2, nation.n_name);
-				nationPrepStmt.setLong(3, nation.n_regionkey);
-				nationPrepStmt.setString(4, nation.n_comment);
-				nationPrepStmt.addBatch();
+				if (nationPrntWr == null) {
+					nationPrepStmt.setLong(1, nation.n_nationkey);
+					nationPrepStmt.setString(2, nation.n_name);
+					nationPrepStmt.setLong(3, nation.n_regionkey);
+					nationPrepStmt.setString(4, nation.n_comment);
+					nationPrepStmt.addBatch();
+				} else {
+					nationPrntWr.printf("%d,", nation.n_nationkey);
+					nationPrntWr.printf("%s,", nation.n_name);
+					nationPrntWr.printf("%d,", nation.n_regionkey);
+					nationPrntWr.printf("%s", nation.n_comment);
+					nationPrntWr.println();
+				}
 
 				long tmpTime = new java.util.Date().getTime();
 				String etStr = "  Elasped Time(ms): "
@@ -247,9 +291,13 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 				LOG.debug(etStr.substring(0, 30)
 						+ "  Writing record " + k + " of " + t);
 				lastTimeMS = tmpTime;
-				nationPrepStmt.executeBatch();
-				nationPrepStmt.clearBatch();
-				conn.commit();
+				if (nationPrntWr == null) {
+					nationPrepStmt.executeBatch();
+					nationPrepStmt.clearBatch();
+					conn.commit();
+				} else {
+					nationPrntWr.flush();
+				}
 				line = br.readLine();
 			}
 
@@ -261,7 +309,11 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 					+ " of " + t);
 			lastTimeMS = tmpTime;
 
-			conn.commit();
+			if (nationPrntWr == null) {
+				// nothing to do since batch already executed and committed
+			} else {
+				nationPrntWr.close();
+			}
 			now = new java.util.Date();
 			LOG.debug("End Region Load @  " + now);
 
@@ -287,10 +339,20 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 
 	} // end loadNations()
 	
-	static int loadSuppliers() throws SQLException {
+	protected int loadSuppliers() throws SQLException {
 		
 		int k = 0;
 		int t = 0;
+        PrintWriter supplierPrntWr = null;
+		
+        if (fileLocation != null) {
+			try { 
+				supplierPrntWr = new PrintWriter(fileLocation + "/" + "supplier.csv");
+			} catch (FileNotFoundException fnfe) { 
+				LOG.error(fnfe); 
+				System.exit(1); 
+			} 
+        }
 		
 		try {
 
@@ -311,14 +373,25 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 
 				k++;
 				
-				supplierPrepStmt.setLong(1, supplier.su_suppkey);
-				supplierPrepStmt.setString(2, supplier.su_name);
-				supplierPrepStmt.setString(3, supplier.su_address);
-				supplierPrepStmt.setLong(4, supplier.su_nationkey);
-				supplierPrepStmt.setString(5, supplier.su_phone);
-				supplierPrepStmt.setDouble(6, supplier.su_acctbal);
-				supplierPrepStmt.setString(7, supplier.su_comment);
-				supplierPrepStmt.addBatch();
+				if (supplierPrntWr == null) {
+					supplierPrepStmt.setLong(1, supplier.su_suppkey);
+					supplierPrepStmt.setString(2, supplier.su_name);
+					supplierPrepStmt.setString(3, supplier.su_address);
+					supplierPrepStmt.setLong(4, supplier.su_nationkey);
+					supplierPrepStmt.setString(5, supplier.su_phone);
+					supplierPrepStmt.setDouble(6, supplier.su_acctbal);
+					supplierPrepStmt.setString(7, supplier.su_comment);
+					supplierPrepStmt.addBatch();
+				} else {
+					supplierPrntWr.printf("%d,", supplier.su_suppkey);
+					supplierPrntWr.printf("%s,", supplier.su_name);
+					supplierPrntWr.printf("%s,", supplier.su_address);
+					supplierPrntWr.printf("%d,", supplier.su_nationkey);
+					supplierPrntWr.printf("%s,", supplier.su_phone);
+					supplierPrntWr.printf("%.2f,", supplier.su_acctbal);
+					supplierPrntWr.printf("%s", supplier.su_comment);
+					supplierPrntWr.println();
+				}
 
 				if ((k % configCommitCount) == 0) {
 					long tmpTime = new java.util.Date().getTime();
@@ -328,9 +401,13 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 					LOG.debug(etStr.substring(0, 30)
 							+ "  Writing record " + k + " of " + t);
 					lastTimeMS = tmpTime;
-					supplierPrepStmt.executeBatch();
-					supplierPrepStmt.clearBatch();
-					conn.commit();
+					if (supplierPrntWr == null) {
+						supplierPrepStmt.executeBatch();
+						supplierPrepStmt.clearBatch();
+						conn.commit();
+					} else {
+						supplierPrntWr.flush();
+					}
 				}
 			}
 
@@ -342,9 +419,13 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 					+ " of " + t);
 			lastTimeMS = tmpTime;
 
-			supplierPrepStmt.executeBatch();
-
-			conn.commit();
+			if (supplierPrntWr == null) {
+				supplierPrepStmt.executeBatch();
+				conn.commit();
+			} else {
+				supplierPrntWr.flush();
+				supplierPrntWr.close();
+			}
 			now = new java.util.Date();
 			LOG.debug("End Region Load @  " + now);
 

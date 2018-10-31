@@ -141,6 +141,8 @@ public class DBWorkload {
         options.addOption("ts", "tracescript", true, "Script of transactions to execute");
         options.addOption(null, "histograms", false, "Print txn histograms");
         options.addOption(null, "dialects-export", true, "Export benchmark SQL to a dialects file");
+        options.addOption(null, "startid", true, "Starting ID for multiple loads");
+        options.addOption(null, "filelocation", true, "File directory for load via csv");
 
         // parse the command line arguments
         CommandLine argsLine = parser.parse(options, args);
@@ -221,8 +223,19 @@ public class DBWorkload {
             String isolationMode = xmlConfig.getString("isolation[not(@bench)]", "TRANSACTION_SERIALIZABLE");
             wrkld.setIsolationMode(xmlConfig.getString("isolation" + pluginTest, isolationMode));
             wrkld.setScaleFactor(xmlConfig.getDouble("scalefactor", 1.0));
-            // add ability to add additional warehouses to tpcc dataset
-            wrkld.setStartId(xmlConfig.getInt("startid", 1));
+            
+            // starting warehouse id to add additional warehouses to tpcc dataset via startid in either config file or cmd line arg
+            wrkld.setStartId(xmlConfig.getInt("startId", 1));
+            if (argsLine.hasOption("startid")) {
+            	wrkld.setStartId(Integer.parseInt(argsLine.getOptionValue("startid")));
+            }
+            
+            // optional directory location for tpcc / chbenchmark to load data via csvs
+            wrkld.setFileLocation(xmlConfig.getString("fileLocation", null));
+            if (argsLine.hasOption("filelocation")) {
+            	wrkld.setFileLocation(argsLine.getOptionValue("filelocation"));
+            }
+
             wrkld.setRecordAbortMessages(xmlConfig.getBoolean("recordabortmessages", false));
             wrkld.setDataDir(xmlConfig.getString("datadir", "."));
 
