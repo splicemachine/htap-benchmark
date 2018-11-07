@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<parameters>
+	
+	<!-- Connection details -->
+	<dbtype>splicemachine</dbtype>
+	<driver>com.splicemachine.db.jdbc.ClientDriver</driver>
+	<DBUrl>jdbc:splice://localhost:1527/splicedb</DBUrl>
+	<username>htap</username>
+	<password>htapuser</password>
+	<isolation>TRANSACTION_SERIALIZABLE</isolation>
+	
+	<!-- Scale factor is the number of warehouses in TPCC -->
+	<scalefactor>25</scalefactor>
+
+	<!-- The workload -->
+	<terminals>4</terminals>
+	<works>
+		<work>
+			<!-- set serial to true for testing each transaction once - be sure to set 0 for time value --> 
+			<!--<serial>true</serial>-->
+
+			<!--<warmup>300</warmup>-->
+			<time>3600</time>
+ 			<active_terminals bench="chbenchmark">4</active_terminals>
+			<rate bench="chbenchmark">unlimited</rate>
+			<weights bench="chbenchmark">100, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
+		</work>
+	</works>
+	
+	<!-- TPCC specific -->  
+	<transactiontypes bench="chbenchmark">
+		<transactiontype>
+			<name>INSERT</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q1</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q2</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q3</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q4</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q5</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q6</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q7</name>
+		</transactiontype>
+		<!--<transactiontype>
+			<name>Q8</name>
+		</transactiontype>-->
+		<transactiontype>
+			<name>Q9</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q10</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q11</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q12</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q13</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q14</name>
+		</transactiontype>      
+		<transactiontype>
+			<name>Q15</name>
+		</transactiontype>   
+		<transactiontype>
+			<name>Q16</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q17</name>
+		</transactiontype>   
+		<transactiontype>
+			<name>Q18</name>
+		</transactiontype>   
+		<transactiontype>
+			<name>Q19</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q20</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q21</name>
+		</transactiontype>
+		<transactiontype>
+			<name>Q22</name>
+		</transactiontype>
+	</transactiontypes>	
+</parameters>
