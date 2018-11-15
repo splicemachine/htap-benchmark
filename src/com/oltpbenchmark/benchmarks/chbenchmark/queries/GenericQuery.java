@@ -40,6 +40,10 @@ public abstract class GenericQuery extends Procedure {
     public void setOwner(Worker w) {
         this.owner = w;
     }
+
+    public Worker getOwner() {
+        return owner;
+    }
 	
 	protected static SQLStmt initSQLStmt(String queryFile) {
 		StringBuilder query = new StringBuilder();
