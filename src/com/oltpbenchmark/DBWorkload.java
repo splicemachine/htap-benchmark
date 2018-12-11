@@ -419,7 +419,7 @@ public class DBWorkload {
                 // We now have the option to run all queries exactly once in
                 // a serial (rather than random) order.
                 String serial_string;
-                serial_string = work.getString("serial", "false");
+                serial_string = work.getString("serial" + pluginTest, "false");
                 if (serial_string.equals("true")) {
                     serial = true;
                 }
@@ -440,10 +440,10 @@ public class DBWorkload {
                 activeTerminals = work.getInt("active_terminals[not(@bench)]", terminals);
                 activeTerminals = work.getInt("active_terminals" + pluginTest, activeTerminals);
                 // If using serial, we should have only one terminal
-                if (serial && activeTerminals != 1) {
-                    LOG.warn("Serial ordering is enabled, so # of active terminals is clamped to 1.");
-                    activeTerminals = 1;
-                }
+//                if (serial && activeTerminals != 1) {
+//                    LOG.warn("Serial ordering is enabled, so # of active terminals is clamped to 1.");
+//                    activeTerminals = 1;
+//                }
                 if (activeTerminals > terminals) {
                     LOG.error(String.format("Configuration error in work %d: " +
                                             "Number of active terminals is bigger than the total number of terminals",
