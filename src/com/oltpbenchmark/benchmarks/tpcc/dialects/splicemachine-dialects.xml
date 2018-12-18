@@ -39,8 +39,8 @@
             <statement name="stockGetCountStockSQL">
                 SELECT COUNT(DISTINCT (S_I_ID)) AS STOCK_COUNT
                   FROM --splice-properties joinOrder=fixed
-                  ORDER_LINE --splice-properties index=null
-                , STOCK --splice-properties joinStrategy=nestedloop, index=null, useSpark=false 
+                  ORDER_LINE --splice-properties useSpark=false, index=null
+                , STOCK --splice-properties joinStrategy=nestedloop, index=null
                 WHERE OL_W_ID = ? AND OL_D_ID = ? AND OL_O_ID &lt; ? AND OL_O_ID >= ? AND S_W_ID = ? AND S_I_ID = OL_I_ID AND S_QUANTITY &lt; ?
             </statement>
         </procedure>
