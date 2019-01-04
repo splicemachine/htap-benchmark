@@ -199,7 +199,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         }
 
         try {
-            PreparedStatement itemPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_ITEM);
+            PreparedStatement itemPrepStmt = itemPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_ITEM) : null;
 
             Item item = new Item();
             int batchSize = 0;
@@ -307,7 +307,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         }
 
         try {
-            PreparedStatement whsePrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_WAREHOUSE);
+            PreparedStatement whsePrepStmt = whsePrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_WAREHOUSE) : null;
             Warehouse warehouse = new Warehouse();
 
             warehouse.w_id = w_id;
@@ -384,7 +384,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         }
 
 		try {
-		    PreparedStatement stckPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_STOCK);
+		    PreparedStatement stckPrepStmt = stckPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_STOCK) : null;
 
 			Stock stock = new Stock();
 			for (int i = 1; i <= numItems; i++) {
@@ -508,7 +508,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
 		try {
 
-			PreparedStatement distPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_DISTRICT);
+			PreparedStatement distPrepStmt = distPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_DISTRICT) : null;
 			District district = new District();
 
 			for (int d = 1; d <= distWhseKount; d++) {
@@ -601,8 +601,8 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 		History history = new History();
 
 		try {
-		    PreparedStatement custPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_CUSTOMER);
-		    PreparedStatement histPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_HISTORY);
+		    PreparedStatement custPrepStmt = custPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_CUSTOMER) : null;
+		    PreparedStatement histPrepStmt = histPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_HISTORY) : null;
 
 			for (int d = 1; d <= districtsPerWarehouse; d++) {
 				for (int c = 1; c <= customersPerDistrict; c++) {
@@ -793,9 +793,9 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
         }
 
 		try {
-		    PreparedStatement ordrPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_OPENORDER);
-		    PreparedStatement nworPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_NEWORDER);
-		    PreparedStatement orlnPrepStmt = getInsertStatement(conn, TPCCConstants.TABLENAME_ORDERLINE);
+		    PreparedStatement ordrPrepStmt = ordrPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_OPENORDER) : null;
+		    PreparedStatement nworPrepStmt = nworPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_NEWORDER) : null;
+		    PreparedStatement orlnPrepStmt = orlnPrntWr == null ? getInsertStatement(conn, TPCCConstants.TABLENAME_ORDERLINE) : null;
 
 			Oorder oorder = new Oorder();
 			NewOrder new_order = new NewOrder();
