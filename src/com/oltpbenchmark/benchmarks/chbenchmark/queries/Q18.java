@@ -43,7 +43,7 @@ public class Q18 extends GenericQuery {
             +          "c_last, "
             +          "o_entry_d, "
             +          "o_ol_cnt HAVING sum(cast(ol_amount as decimal(12,2))) > 200 "
-            + "ORDER BY amount_sum DESC, o_entry_d"
+            + "ORDER BY amount_sum DESC, o_entry_d { limit 100 }"
         );
 	
 		protected SQLStmt get_query() {
