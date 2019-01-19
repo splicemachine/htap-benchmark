@@ -346,6 +346,16 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
             new MonitorThread(this.intervalMonitor).start();
         }
 
+        if (phase.warmupTime == 0) {
+            synchronized (testState) {
+                if (phase != null && phase.isLatencyRun())
+                    testState.startColdQuery();
+                else
+                    testState.startMeasure();
+            }
+            LOG.info(StringUtil.bold("MEASURE") + " :: no warmup specified, starting measurements.");
+        }
+
         // Main Loop
         while (true) {           
             // posting new work... and reseting the queue in case we have new
