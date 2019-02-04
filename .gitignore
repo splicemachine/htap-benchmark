@@ -5,6 +5,8 @@ output.res
 .classpath
 .settings
 results
+quickstart/config.xml
+quickstart/load-htap.sql
 
 ## -------------------------------
 ## Kate Swap Files

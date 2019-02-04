@@ -21,8 +21,8 @@ ant
 
 mkdir -p results
 
-session=htap-$SCALE_$CWORKERS_$HWORKERS
-./oltpbenchmark -b 'tpcc,chbenchmark' -c quickstart/config.xml --execute=true -s 300 -ss -o $session > results/$session.out
+session=htap-${SCALE}_${CWORKERS}_${HWORKERS}
+./oltpbenchmark -b 'tpcc,chbenchmark' -c quickstart/config.xml --execute=true -s 300 -ss -o $session | tee results/$session.out
 
 popd
 
