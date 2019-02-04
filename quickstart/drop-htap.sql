@@ -2,8 +2,6 @@
 
 elapsedtime on;
 
-connect 'jdbc:splice://localhost:1527/splicedb;user=splice;password=admin';
-
 /* Part 1 - drop view and tables - will move to oltpbench in the future */ 
 
 set schema htap;
@@ -25,6 +23,12 @@ DROP TABLE ORDER_LINE;
 DROP TABLE STOCK;
 DROP TABLE WAREHOUSE;
 
+call SYSCS_UTIL.VACUUM();
+
 /* Part 2 - drop usr */ 
 
 call SYSCS_UTIL.SYSCS_DROP_USER('htap');
+
+call SYSCS_UTIL.SYSCS_UPDATE_ALL_SYSTEM_PROCEDURES();
+call SYSCS_UTIL.SYSCS_EMPTY_STATEMENT_CACHE();
+

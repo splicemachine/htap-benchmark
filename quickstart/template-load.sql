@@ -1,8 +1,6 @@
-/* sql script to create schema and load data for tpcc and chbanchmark data for htap-25 */
+/* sql script to create schema and load data for tpcc and chbanchmark data for htap-1000 */
 
 elapsedtime on;
-
-connect 'jdbc:splice://localhost:1527/splicedb;user=splice;password=admin';
 
 /* Part 1 - create usr */ 
 
@@ -181,49 +179,31 @@ AND ol_supply_w_id = s_w_id
 AND ol_delivery_d >= '2007-01-02 00:00:00.000000' 
 GROUP BY supplier_no;
 
-
-/* Part 3 - load data from csvs */
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'WAREHOUSE','W_ID,W_YTD,W_TAX,W_NAME,W_STREET_1,W_STREET_2,W_CITY,W_STATE,W_ZIP,W_NATIONKEY','/usr/local/splicemachine/demodata/htap-25/warehouse.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'STOCK',
-   'S_W_ID,S_I_ID,S_QUANTITY,S_YTD,S_ORDER_CNT,S_REMOTE_CNT,S_DATA,S_DIST_01,S_DIST_02,S_DIST_03,S_DIST_04,S_DIST_05,S_DIST_06,S_DIST_07,S_DIST_08,S_DIST_09,S_DIST_10,S_SUPPKEY',
-   '/usr/local/splicemachine/demodata/htap-25/stock.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'CUSTOMER','C_W_ID,C_D_ID,C_ID,C_DISCOUNT,C_CREDIT,C_LAST,C_FIRST,C_CREDIT_LIM,C_BALANCE,C_YTD_PAYMENT,C_PAYMENT_CNT,C_DELIVERY_CNT,C_STREET_1,C_STREET_2,C_CITY,C_STATE,C_ZIP,C_NATIONKEY,C_PHONE,C_SINCE,C_MIDDLE,C_DATA','/usr/local/splicemachine/demodata/htap-25/customer.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'DISTRICT',
-   'D_W_ID,D_ID,D_YTD,D_TAX,D_NEXT_O_ID,D_NAME,D_STREET_1,D_STREET_2,D_CITY,D_STATE,D_ZIP,D_NATIONKEY',
-   '/usr/local/splicemachine/demodata/htap-25/district.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'HISTORY','H_C_ID,H_C_D_ID,H_C_W_ID,H_D_ID,H_W_ID,H_DATE,H_AMOUNT,H_DATA','/usr/local/splicemachine/demodata/htap-25/history.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'ITEM','I_ID,I_NAME,I_PRICE,I_DATA,I_IM_ID','/usr/local/splicemachine/demodata/htap-25/item.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'NEW_ORDER','NO_W_ID,NO_D_ID,NO_O_ID','/usr/local/splicemachine/demodata/htap-25/new_order.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'OORDER','O_W_ID,O_D_ID,O_ID,O_C_ID,O_CARRIER_ID,O_OL_CNT,O_ALL_LOCAL,O_ENTRY_D','/usr/local/splicemachine/demodata/htap-25/oorder.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'ORDER_LINE',
-   'OL_W_ID,OL_D_ID,OL_O_ID,OL_NUMBER,OL_I_ID,OL_DELIVERY_D,OL_AMOUNT,OL_SUPPLY_W_ID,OL_QUANTITY,OL_DIST_INFO',
-   '/usr/local/splicemachine/demodata/htap-25/order_line.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'REGION','R_REGIONKEY,R_NAME,R_COMMENT','/usr/local/splicemachine/demodata/htap-25/region.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'NATION','n_nationkey,n_name,n_regionkey,n_comment','/usr/local/splicemachine/demodata/htap-25/nation.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-call SYSCS_UTIL.IMPORT_DATA (current schema,'SUPPLIER','su_suppkey,su_name,su_address,su_nationkey,su_phone,su_acctbal,su_comment','/usr/local/splicemachine/demodata/htap-25/supplier.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null);
-
-/* Part 4 - optimize database */ 
-
 -- create indexes
 CREATE INDEX CUSTOMER_IX_CUSTOMER_NAME ON CUSTOMER(C_W_ID, C_D_ID, C_LAST, C_FIRST, C_MIDDLE, C_ID, C_STREET_1, C_STREET_2, C_CITY,
     C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT,C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE);
 CREATE INDEX IDX_OORDER ON OORDER (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID, O_ENTRY_D);
 CREATE INDEX OL_I_ID ON ORDER_LINE (OL_W_ID, OL_D_ID, OL_I_ID, OL_O_ID);
 
+/* Part 3 - load data from csvs */
+
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'WAREHOUSE',  null, '###SOURCE###/warehouse.csv',  null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'STOCK',      null, '###SOURCE###/stock.csv',      null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'CUSTOMER',   null, '###SOURCE###/customer.csv',   null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'DISTRICT',   null, '###SOURCE###/district.csv',   null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'HISTORY',    null, '###SOURCE###/history.csv',    null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'ITEM',       null, '###SOURCE###/item.csv',       null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'NEW_ORDER',  null, '###SOURCE###/new_order.csv',  null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'OORDER',     null, '###SOURCE###/oorder.csv',     null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'ORDER_LINE', null, '###SOURCE###/order_line.csv', null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'REGION',     null, '###SOURCE###/region.csv',     null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'NATION',     null, '###SOURCE###/nation.csv',     null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+call SYSCS_UTIL.BULK_IMPORT_HFILE (current schema, 'SUPPLIER',   null, '###SOURCE###/supplier.csv',   null, '"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false);
+
+/* Part 4 - optimize database */ 
+
 -- perform major compaction
-call SYSCS_UTIL.SYSCS_PERFORM_MAJOR_COMPACTION_ON_SCHEMA('htap');
+-- call SYSCS_UTIL.SYSCS_PERFORM_MAJOR_COMPACTION_ON_SCHEMA('htap');
 
 -- build query statistics
 ANALYZE SCHEMA htap;
