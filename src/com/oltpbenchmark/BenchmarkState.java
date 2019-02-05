@@ -32,9 +32,18 @@ public final class BenchmarkState {
 	// Assigned a value when starting the test. Used for offsets in the
 	// latency record.
 	private final long testStartNs;
+	private long deadlineNs;
 
 	public long getTestStartNs() {
 		return testStartNs;
+	}
+
+	public void setDeadline(long ts) {
+		deadlineNs = ts;
+	}
+
+	public long getDeadline() {
+		return deadlineNs;
 	}
 
 	private final CountDownLatch startBarrier;
@@ -47,8 +56,6 @@ public final class BenchmarkState {
 	 * @param numThreads
 	 *            number of threads involved in the test: including the
 	 *            master thread.
-	 * @param rateLimited
-	 * @param queueLimit
 	 */
 	public BenchmarkState(int numThreads) {
 		startBarrier = new CountDownLatch(numThreads);

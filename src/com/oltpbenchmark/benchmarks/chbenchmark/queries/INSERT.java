@@ -39,8 +39,8 @@ public class INSERT extends GenericQuery {
 
     private static int orderId = 0;
 
-    public ResultSet run(Connection conn) throws SQLException {
-        Worker w = getOwner();
+    @Override
+    public ResultSet run(Connection conn, Worker w, int timeout) throws SQLException {
         int numWarehouses = (int)w.getWorkloadConfiguration().getScaleFactor();
 
         int o_id;

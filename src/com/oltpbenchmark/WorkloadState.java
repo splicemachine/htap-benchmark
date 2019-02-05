@@ -289,5 +289,9 @@ public class WorkloadState {
    public long getTestStartNs() {
        return benchmarkState.getTestStartNs();
    }
+
+   public long getTestDeadline() {
+       return benchmarkState.getDeadline();
+   }
    
 }

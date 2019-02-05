@@ -35,16 +35,7 @@ public abstract class GenericQuery extends Procedure {
     private static final Logger LOG = Logger.getLogger(GenericQuery.class);
 
 	private PreparedStatement stmt;
-    private Worker owner;
 
-    public void setOwner(Worker w) {
-        this.owner = w;
-    }
-
-    public Worker getOwner() {
-        return owner;
-    }
-	
 	protected static SQLStmt initSQLStmt(String queryFile) {
 		StringBuilder query = new StringBuilder();
 		
@@ -67,13 +58,13 @@ public abstract class GenericQuery extends Procedure {
 	
 	protected abstract SQLStmt get_query();
     
-    public ResultSet run(Connection conn) throws SQLException {
+    public ResultSet run(Connection conn, Worker owner, int timeout) throws SQLException {
 		
 		//initializing all prepared statements
     	stmt=this.getPreparedStatement(conn, get_query());
+        stmt.setQueryTimeout(timeout);
 
-    	if (owner != null)
-            owner.setCurrStatement(stmt);
+        owner.setCurrStatement(stmt);
 
     	LOG.trace("Running " + this.getClass());
         ResultSet rs = null;
@@ -96,8 +87,7 @@ public abstract class GenericQuery extends Procedure {
     		//do nothing
     	}
     	
-        if (owner != null)
-            owner.setCurrStatement(null);
+        owner.setCurrStatement(null);
 
 		return null;
     

@@ -339,6 +339,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
         boolean resetQueues = true;
 
         long delta = phase.time * 1000000000L;
+        testState.setDeadline(start + delta);
         boolean lastEntry = false;
 
         // Initialize the Monitor
@@ -444,11 +445,11 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                             } else if (phase != null) {
                                 phase.resetSerial();
                                 LOG.info(phase.currentPhaseString());
-                            if (phase.rate < lowestRate) {
-                                lowestRate = phase.rate;
+                                if (phase.rate < lowestRate) {
+                                    lowestRate = phase.rate;
+                                }
                             }
                         }
-                    }
                     }
                     if (phase != null) {
                         // update frequency in which we check according to
@@ -457,6 +458,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                         // intervalNs = (long) (1000000000. / (double)
                         // lowestRate + 0.5);
                         delta += phase.time * 1000000000L;
+                        testState.setDeadline(start + delta);
                     }
                 }
             }
@@ -480,7 +482,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                     if (phase != null && phase.isLatencyRun())
                         testState.startColdQuery();
                     else
-                testState.startMeasure();
+                        testState.startMeasure();
                     interruptWorkers();
                 }
                 start = now;
