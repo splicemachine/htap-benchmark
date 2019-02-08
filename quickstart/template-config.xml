@@ -13,7 +13,8 @@
 	<scalefactor>###SCALE###</scalefactor>
 
 	<!-- The workload -->
-	<terminals>###SCALE###</terminals>
+	<terminals bench="tpcc">###WORKERS_TPCC###</terminals>
+	<terminals bench="chbenchmark">###WORKERS_TPCH###</terminals>
 	<works>
 		<work>
 			<!-- set serial to true for testing each transaction once - be sure to set 0 for time value --> 
@@ -21,12 +22,10 @@
 
 			<!--<warmup>300</warmup>-->
 			<time>###TIME###</time>
-			<active_terminals bench="tpcc">###WORKERS_TPCC###</active_terminals>
 			<rate bench="tpcc">unlimited</rate>
 			<weights bench="tpcc">45,43,4,4,4</weights>
- 			<active_terminals bench="chbenchmark">###WORKERS_TPCH###</active_terminals>
 			<rate bench="chbenchmark">unlimited</rate>
-                        <serial bench="chbenchmark">true</serial>
+			<serial bench="chbenchmark">true</serial>
 			<weights bench="chbenchmark">5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5</weights>
 		</work>
 	</works>
