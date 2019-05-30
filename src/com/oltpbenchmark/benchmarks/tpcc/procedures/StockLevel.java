@@ -32,6 +32,8 @@ import com.oltpbenchmark.benchmarks.tpcc.TPCCWorker;
 public class StockLevel extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(StockLevel.class);
+    private static final int STOCK_KEYING_TIME = 2;
+    private static final int STOCK_THINK_TIME  = 5;
 
 	public SQLStmt stockGetDistOrderIdSQL = new SQLStmt(
 	        "SELECT D_NEXT_O_ID " +
@@ -53,6 +55,14 @@ public class StockLevel extends TPCCProcedure {
 	// Stock Level Txn
 	private PreparedStatement stockGetDistOrderId = null;
 	private PreparedStatement stockGetCountStock = null;
+
+    public int getKeyingTime() {
+        return STOCK_KEYING_TIME;
+    }
+
+    public int getThinkTime() {
+        return STOCK_THINK_TIME;
+    }
 
 	 public ResultSet run(Connection conn, Random gen,
 				int w_id, int numWarehouses,

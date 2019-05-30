@@ -33,6 +33,8 @@ import com.oltpbenchmark.benchmarks.tpcc.TPCCConfig;
 public class NewOrder extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(NewOrder.class);
+	private static final int NEWORDER_KEYING_TIME = 18;
+	private static final int NEWORDER_THINK_TIME  = 12;
 
     public final SQLStmt stmtGetCustSQL = new SQLStmt(
     		"SELECT C_DISCOUNT, C_LAST, C_CREDIT" +
@@ -106,6 +108,13 @@ public class NewOrder extends TPCCProcedure {
 	private PreparedStatement stmtUpdateStock = null;
 	private PreparedStatement stmtInsertOrderLine = null;
 
+	public int getKeyingTime() {
+		return NEWORDER_KEYING_TIME;
+	}
+
+	public int getThinkTime() {
+		return NEWORDER_THINK_TIME;
+	}
 
     public ResultSet run(Connection conn, Random gen,
 			int terminalWarehouseID, int numWarehouses,

@@ -22,6 +22,7 @@
 
 			<!--<warmup>300</warmup>-->
 			<time>###TIME###</time>
+			<!--<rate bench="tpcc">waittimes</rate>-->
 			<rate bench="tpcc">unlimited</rate>
 			<weights bench="tpcc">45,43,4,4,4</weights>
 			<rate bench="chbenchmark">unlimited</rate>

@@ -34,6 +34,8 @@ import com.oltpbenchmark.benchmarks.tpcc.TPCCConfig;
 public class Delivery extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(Delivery.class);
+    private static final int DELIVERY_KEYING_TIME = 2;
+    private static final int DELIVERY_THINK_TIME  = 5;
 
 	public SQLStmt delivGetOrderIdSQL = new SQLStmt(
 	        "SELECT NO_O_ID FROM " + TPCCConstants.TABLENAME_NEWORDER + 
@@ -93,6 +95,13 @@ public class Delivery extends TPCCProcedure {
 	private PreparedStatement delivSumOrderAmount = null;
 	private PreparedStatement delivUpdateCustBalDelivCnt = null;
 
+    public int getKeyingTime() {
+        return DELIVERY_KEYING_TIME;
+    }
+
+    public int getThinkTime() {
+        return DELIVERY_THINK_TIME;
+    }
 
     public ResultSet run(Connection conn, Random gen,
 			int w_id, int numWarehouses,

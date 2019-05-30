@@ -35,6 +35,8 @@ import com.oltpbenchmark.benchmarks.tpcc.pojo.Customer;
 public class Payment extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(Payment.class);
+    private static final int PAYMENT_KEYING_TIME =  3;
+    private static final int PAYMENT_THINK_TIME  = 12;
 
     public SQLStmt payUpdateWhseSQL = new SQLStmt(
             "UPDATE " + TPCCConstants.TABLENAME_WAREHOUSE + 
@@ -119,6 +121,14 @@ public class Payment extends TPCCProcedure {
     private PreparedStatement payUpdateCustBal = null;
     private PreparedStatement payInsertHist = null;
     private PreparedStatement customerByName = null;
+
+    public int getKeyingTime() {
+        return PAYMENT_KEYING_TIME;
+    }
+
+    public int getThinkTime() {
+        return PAYMENT_THINK_TIME;
+    }
 
     public ResultSet run(Connection conn, Random gen,
                          int w_id, int numWarehouses,

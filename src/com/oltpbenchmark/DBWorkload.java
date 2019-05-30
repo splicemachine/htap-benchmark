@@ -60,7 +60,8 @@ public class DBWorkload {
     
     private static final String RATE_DISABLED = "disabled";
     private static final String RATE_UNLIMITED = "unlimited";
-    
+    private static final String RATE_WAITTIMES = "waittimes";
+
     /**
      * @param args
      * @throws Exception 
@@ -396,6 +397,9 @@ public class DBWorkload {
                     disabled = true;
                 } else if (rate_string.equals(RATE_UNLIMITED)) {
                     rateLimited = false;
+                } else if (rate_string.equals(RATE_WAITTIMES)) {
+                    rateLimited = false;
+                    rate = Integer.MAX_VALUE;
                 } else if (rate_string.isEmpty()) {
                     LOG.fatal(String.format("Please specify the rate for phase %d and workload %s", i, plugin));
                     System.exit(-1);

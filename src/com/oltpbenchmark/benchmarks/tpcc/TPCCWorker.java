@@ -27,7 +27,9 @@ package com.oltpbenchmark.benchmarks.tpcc;
 
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+import com.oltpbenchmark.Phase;
 import org.apache.log4j.Logger;
 
 import com.oltpbenchmark.api.Procedure.UserAbortException;
@@ -69,10 +71,20 @@ public class TPCCWorker extends Worker<TPCCBenchmark> {
 	 */
 	@Override
     protected TransactionStatus executeWork(TransactionType nextTransaction) throws UserAbortException, SQLException {
+		/* In waittime mode, the harness submits work at full speed. Rate encodes the mode. */
+		Phase curPhase = wrkld.getWorkloadState().getCurrentPhase();
+		boolean wait = !curPhase.isRateLimited() && curPhase.rate == Integer.MAX_VALUE;
+
         try {
             TPCCProcedure proc = (TPCCProcedure) this.getProcedure(nextTransaction.getProcedureClass());
+            if (wait) {
+				sleepMillis(proc.getKeyingTime() * 1000l);
+			}
             proc.run(conn, gen, terminalWarehouseID, numWarehouses,
                     terminalDistrictLowerID, terminalDistrictUpperID, this);
+            if (wait) {
+				sleepThinkTime(proc.getThinkTime());
+			}
         } catch (ClassCastException ex){
             //fail gracefully
         	LOG.error("We have been invoked with an INVALID transactionType?!");
@@ -80,5 +92,26 @@ public class TPCCWorker extends Worker<TPCCBenchmark> {
 	    }
         conn.commit();
         return (TransactionStatus.SUCCESS);
+	}
+
+	private static void sleepMillis(long ms) {
+		long curTime  = System.currentTimeMillis();
+		long deadLine = curTime + ms;
+		while (curTime < deadLine) {
+			try {
+				Thread.sleep(deadLine - curTime);
+			} catch (InterruptedException e) {
+				// ignore
+			}
+			curTime = System.currentTimeMillis();
+		}
+	}
+
+	private static void sleepThinkTime(int seconds) {
+		if (seconds >= 0) {
+			double factor = Math.min(-Math.log(ThreadLocalRandom.current().nextDouble()), 10.);
+			long ms = Math.round(factor * seconds * 1000.);
+			sleepMillis(ms);
+		}
 	}
 }

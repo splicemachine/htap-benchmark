@@ -35,6 +35,8 @@ import com.oltpbenchmark.benchmarks.tpcc.pojo.Customer;
 public class OrderStatus extends TPCCProcedure {
 
     private static final Logger LOG = Logger.getLogger(OrderStatus.class);
+    private static final int ORDER_KEYING_TIME =  2;
+    private static final int ORDER_THINK_TIME  = 10;
 
 	public SQLStmt ordStatGetNewestOrdSQL = new SQLStmt(
 	        "SELECT O_ID, O_CARRIER_ID, O_ENTRY_D " +
@@ -75,6 +77,13 @@ public class OrderStatus extends TPCCProcedure {
 	private PreparedStatement payGetCust = null;
 	private PreparedStatement customerByName = null;
 
+    public int getKeyingTime() {
+        return ORDER_KEYING_TIME;
+    }
+
+    public int getThinkTime() {
+        return ORDER_THINK_TIME;
+    }
 
     public ResultSet run(Connection conn, Random gen, int w_id, int numWarehouses, int terminalDistrictLowerID, int terminalDistrictUpperID, TPCCWorker w) throws SQLException {
         boolean trace = LOG.isTraceEnabled();

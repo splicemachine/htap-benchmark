@@ -26,6 +26,10 @@ import com.oltpbenchmark.benchmarks.tpcc.TPCCWorker;
 
 public abstract class TPCCProcedure extends Procedure {
 
+    public abstract int getKeyingTime();
+
+    public abstract int getThinkTime();
+
     public abstract ResultSet run(Connection conn, Random gen,
             int terminalWarehouseID, int numWarehouses,
             int terminalDistrictLowerID, int terminalDistrictUpperID,
