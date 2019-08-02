@@ -8,15 +8,19 @@ SPLICE_USERNAME=splice
 SPLICE_PSWD=admin
 
 # choose the data set scale factor: 2, 25, 250, 1000, 10k
-SCALE=25
+SCALE=1000
 
-# choose data source: S3, localFS/HDFS (make sure data is present in the file system)
-IMPORT_S3='s3a://splice-benchmark-data/flat/HTAP'
-IMPORT_FS='/data/htap'
-SOURCE=$IMPORT_FS/htap-$SCALE
+# CSVs from a public S3 bucket (scale factors up to 1000)
+#SOURCE=s3a://splice-benchmark-data/flat/HTAP/htap-$SCALE
+
+# Database backup in a public S3 bucket (scale factors 1000 and 10000)
+SOURCE=s3a://splice-benchmark-data/database/HTAP/$SCALE
+
+# CSVs from localFS/HDFS (make sure data is present in the file system)
+#SOURCE=/data/htap/htap-$SCALE
 
 # benchmark parameters
-TIME=30
+TIME=600
 CWORKERS=$SCALE
 HWORKERS=4
 

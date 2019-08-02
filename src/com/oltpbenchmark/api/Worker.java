@@ -53,7 +53,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
     private final int id;
     private final T benchmarkModule;
-    protected final Connection conn;
+    protected Connection conn;
     protected final WorkloadConfiguration wrkld;
     protected final TransactionTypes transactionTypes;
     protected final Map<TransactionType, Procedure> procedures = new HashMap<TransactionType, Procedure>();
@@ -76,20 +76,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
         this.currStatement = null;
         this.transactionTypes = this.wrkld.getTransTypes();
         assert (this.transactionTypes != null) : "The TransactionTypes from the WorkloadConfiguration is null!";
-
-        try {
-            this.conn = this.benchmarkModule.makeConnection();
-            this.conn.setAutoCommit(false);
-
-            // 2018-01-11: Since we want to support NoSQL systems
-            // that do not support txns, we will not invoke certain JDBC functions
-            // that may cause an error in them.
-            if (this.wrkld.getDBType().shouldUseTransactions()) {
-                this.conn.setTransactionIsolation(this.wrkld.getIsolationMode());
-            }
-        } catch (SQLException ex) {
-            throw new RuntimeException("Failed to connect to database", ex);
-        }
 
         // Generate all the Procedures that we're going to need
         this.procedures.putAll(this.benchmarkModule.getProcedures());
@@ -219,7 +205,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
         // Invoke the initialize callback
         try {
-            this.initialize();
+            initialize0();
         } catch (Throwable ex) {
             throw new RuntimeException("Unexpected error when initializing " + this, ex);
         }
@@ -545,13 +531,30 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
             // this correctly in JDBC.
             if (dbType == DatabaseType.PELOTON || dbType == DatabaseType.SPLICEMACHINE) {
                 msg += "\nBut we are not stopping because " + dbType + " cannot handle this correctly";
-                LOG.warn(msg);
+                LOG.warn(msg, ex);
             } else {
                 throw new RuntimeException(msg, ex);
             }
         }
 
         return (next);
+    }
+
+    private void initialize0() {
+        try {
+            this.conn = this.benchmarkModule.makeConnection();
+            this.conn.setAutoCommit(false);
+
+            // 2018-01-11: Since we want to support NoSQL systems
+            // that do not support txns, we will not invoke certain JDBC functions
+            // that may cause an error in them.
+            if (this.wrkld.getDBType().shouldUseTransactions()) {
+                this.conn.setTransactionIsolation(this.wrkld.getIsolationMode());
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException("Failed to connect to database", ex);
+        }
+        initialize();
     }
 
     /**
@@ -581,10 +584,13 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
      *            TODO
      */
     public void tearDown(boolean error) {
-        try {
-            conn.close();
-        } catch (SQLException e) {
-            LOG.warn("No connection to close");
+        if (conn != null) {
+            try {
+                conn.close();
+                conn = null;
+            } catch (SQLException e) {
+                LOG.warn("Error closing connection", e);
+            }
         }
     }
 
