@@ -88,7 +88,7 @@ public class EpinionsBenchmark extends BenchmarkModule {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
         return workers;
     }

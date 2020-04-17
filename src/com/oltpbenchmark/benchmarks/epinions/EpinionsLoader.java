@@ -103,7 +103,7 @@ public class EpinionsLoader extends Loader<EpinionsBenchmark> {
                 try {
                     userLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -119,7 +119,7 @@ public class EpinionsLoader extends Loader<EpinionsBenchmark> {
                     userLatch.await();
                     itemLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 

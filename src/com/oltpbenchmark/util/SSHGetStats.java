@@ -59,7 +59,7 @@ public class SSHGetStats {
 			if (isAuthenticated == false)
 				throw new IOException("Authentication failed.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 
 		diskStatsOldValue = getDiskStats();
@@ -97,7 +97,7 @@ public class SSHGetStats {
 
 		} catch (Exception e) {
 
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 
 		getPercentageCPUSinceLastCall();

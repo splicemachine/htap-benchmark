@@ -36,7 +36,7 @@ public class MysqlGetStats {
 		try {
 			Class.forName(ini.getProperty("driver"));
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 		try {
 			conn = DriverManager.getConnection(ini.getProperty("conn"),
@@ -45,7 +45,7 @@ public class MysqlGetStats {
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 
 		// oldCommit = getStats("Com_commit");

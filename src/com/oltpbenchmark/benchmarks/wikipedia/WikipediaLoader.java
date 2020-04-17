@@ -145,7 +145,7 @@ public class WikipediaLoader extends Loader<WikipediaBenchmark> {
                 try {
                     userPageLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -160,7 +160,7 @@ public class WikipediaLoader extends Loader<WikipediaBenchmark> {
                 try {
                     userPageLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 

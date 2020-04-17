@@ -71,7 +71,7 @@ public class TATPLoader extends Loader<TATPBenchmark> {
                 try {
                     subLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -87,7 +87,7 @@ public class TATPLoader extends Loader<TATPBenchmark> {
                 try {
                     subLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 

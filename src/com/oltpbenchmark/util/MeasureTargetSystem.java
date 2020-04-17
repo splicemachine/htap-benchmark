@@ -75,15 +75,15 @@ public class MeasureTargetSystem implements Runnable {
 			}
 
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		} catch (IOException e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 
 	}

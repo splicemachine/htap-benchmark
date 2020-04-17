@@ -96,7 +96,7 @@ public class TwitterLoader extends Loader<TwitterBenchmark> {
                     try {
                         userLatch.await();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        e.printStackTrace(System.err);
                         throw new RuntimeException(e);
                     }
 
@@ -116,7 +116,7 @@ public class TwitterLoader extends Loader<TwitterBenchmark> {
                     try {
                         userLatch.await();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        e.printStackTrace(System.err);
                         throw new RuntimeException(e);
                     }
 

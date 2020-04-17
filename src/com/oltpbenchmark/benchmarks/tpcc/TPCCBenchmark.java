@@ -57,7 +57,7 @@ public class TPCCBenchmark extends BenchmarkModule {
 			List<TPCCWorker> terminals = createTerminals();
 			workers.addAll(terminals);
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 		}
 
 		return workers;

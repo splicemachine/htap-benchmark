@@ -149,7 +149,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     dateLatch.await();
                     callCenterLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -164,7 +164,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     dateLatch.await();
                     catalogPageLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -179,7 +179,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     dateLatch.await();
                     storeLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -194,7 +194,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     dateLatch.await();
                     webSiteLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -209,7 +209,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     incomeLatch.await();
                     householdLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -225,7 +225,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     itemLatch.await();
                     promoLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -241,7 +241,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     itemLatch.await();
                     warehouseLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -259,7 +259,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     householdLatch.await();
                     customerLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -275,7 +275,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     customerLatch.await();
                     webPageLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -298,7 +298,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     storeLatch.await();
                     storeSalesLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -321,7 +321,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     storeLatch.await();
                     storeSalesLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -347,7 +347,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     webSiteLatch.await();
                     webSalesLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -370,7 +370,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     webPageLatch.await();
                     webSalesLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -396,7 +396,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     catalogPageLatch.await();
                     catalogSalesLatch.countDown();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -422,7 +422,7 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
                     catalogPageLatch.await();
                     catalogSalesLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -603,16 +603,16 @@ public class TPCDSLoader extends Loader<TPCDSBenchmark> {
             if (se != null) LOG.error(se.getClass().getSimpleName() + " Cause => " + se.getMessage());
             transRollback(conn);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             transRollback(conn);
         } finally {
             if (br != null){
                 try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
         }

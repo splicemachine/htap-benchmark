@@ -645,7 +645,7 @@ public class Histogram<X> implements JSONSerializable {
                     stringer.key(element.name()).value(field.get(this));
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                ex.printStackTrace(System.err);
                 System.exit(1);
             }
         } // FOR
@@ -686,7 +686,7 @@ public class Histogram<X> implements JSONSerializable {
                     field.set(this, object.getInt(element.name()));
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                ex.printStackTrace(System.err);
                 System.exit(1);
             }
         } // FOR

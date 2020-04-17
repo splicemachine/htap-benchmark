@@ -86,7 +86,7 @@ public class DBWorkload {
             pluginConfig = new XMLConfiguration("config/plugin.xml");
         } catch (ConfigurationException e1) {
             LOG.info("Plugin configuration file config/plugin.xml is missing");
-            e1.printStackTrace();
+            e1.printStackTrace(System.err);
         }
         pluginConfig.setExpressionEngine(new XPathExpressionEngine());
         Options options = new Options();
@@ -400,7 +400,7 @@ public class DBWorkload {
                 } else if (rate_string.equals(RATE_WAITTIMES)) {
                     rateLimited = false;
                     rate = Integer.MAX_VALUE;
-                } else if (rate_string.isEmpty()) {
+                } else if (rate_string.isEmpty())  {
                     LOG.fatal(String.format("Please specify the rate for phase %d and workload %s", i, plugin));
                     System.exit(-1);
                 } else {

@@ -65,7 +65,7 @@ public class YCSBBenchmark extends BenchmarkModule {
             metaConn.close();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
         return workers;
     }

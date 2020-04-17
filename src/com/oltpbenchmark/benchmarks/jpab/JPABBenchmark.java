@@ -57,7 +57,7 @@ public class JPABBenchmark extends BenchmarkModule {
             test.buildInventory(totalObjectCount * 13 / 10);
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
         for (int i = 0; i < workConf.getTerminals(); ++i) {
             JPABWorker worker = new JPABWorker(this, i , test);

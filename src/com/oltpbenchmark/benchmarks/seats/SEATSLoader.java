@@ -181,7 +181,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     histLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -198,7 +198,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     countryLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -214,7 +214,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     countryLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -233,7 +233,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     fixedLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -254,7 +254,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     scalingPrepLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -270,7 +270,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     scalingPrepLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -286,7 +286,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     distanceLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -305,7 +305,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                     flightLatch.await();
                     custLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -322,7 +322,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                     flightLatch.await();
                     custLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 
@@ -337,7 +337,7 @@ public class SEATSLoader extends Loader<SEATSBenchmark> {
                 try {
                     loadLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     throw new RuntimeException(e);
                 }
 

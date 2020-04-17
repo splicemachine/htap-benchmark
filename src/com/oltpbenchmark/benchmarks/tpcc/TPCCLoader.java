@@ -126,7 +126,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
                     try {
                         itemLatch.await();
                     } catch (InterruptedException ex) {
-                        ex.printStackTrace();
+                        ex.printStackTrace(System.err);
                         throw new RuntimeException(ex);
                     }
 
@@ -357,7 +357,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			LOG.debug(se.getMessage());
 			transRollback(conn);
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 			transRollback(conn);
 		}
 
@@ -483,7 +483,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			transRollback(conn);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 			transRollback(conn);
 		}
 
@@ -571,7 +571,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			LOG.debug(se.getMessage());
 			transRollback(conn);
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 			transRollback(conn);
 		}
 
@@ -763,7 +763,7 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 			LOG.debug(se.getMessage());
 			transRollback(conn);
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 			transRollback(conn);
 		}
 
@@ -995,10 +995,10 @@ public class TPCCLoader extends Loader<TPCCBenchmark> {
 
         } catch (SQLException se) {
             LOG.debug(se.getMessage());
-            se.printStackTrace();
+            se.printStackTrace(System.err);
             transRollback(conn);
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             transRollback(conn);
         }
 
