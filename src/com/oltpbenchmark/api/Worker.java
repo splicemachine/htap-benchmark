@@ -20,10 +20,8 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
@@ -50,6 +48,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
     // Interval requests used by the monitor
     private AtomicInteger intervalRequests = new AtomicInteger(0);
+    private Map<TransactionType, AtomicInteger> transactionTypeRequests = new HashMap<TransactionType, AtomicInteger>();
 
     private final int id;
     private final T benchmarkModule;
@@ -86,7 +85,14 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
             this.name_procedures.put(e.getKey().getName(), proc);
             this.class_procedures.put(proc.getClass(), proc);
             // e.getValue().generateAllPreparedStatements(this.conn);
+
         } // FOR
+
+        // DBAAS-3805 - initialize transaction type request counts
+        for (TransactionType t : this.transactionTypes)
+        {
+            transactionTypeRequests.put(t,new AtomicInteger(0));
+        }
     }
 
     /**
@@ -138,6 +144,9 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
     public final int getAndResetIntervalRequests() {
         return intervalRequests.getAndSet(0);
+    }
+    public final Map<TransactionType, AtomicInteger> getTransactionTypeRequests(){
+        return transactionTypeRequests;
     }
 
     public final Iterable<LatencyRecord.Sample> getLatencyRecords() {
@@ -318,6 +327,10 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                     if (preState == State.MEASURE && type != null && this.wrkldState.getCurrentPhase().id == phase.id) {
                         latencies.addLatency(type.getId(), start, end, this.id, phase.id);
                         intervalRequests.incrementAndGet();
+
+                        // record count for each transaction Type DBAAS-3805
+                        AtomicInteger reqCount = transactionTypeRequests.get(type);
+                        reqCount.incrementAndGet();
                     }
                     if (phase.isLatencyRun())
                         this.wrkldState.startColdQuery();

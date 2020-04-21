@@ -19,15 +19,9 @@ package com.oltpbenchmark;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections15.map.ListOrderedMap;
 import org.apache.log4j.Logger;
@@ -273,14 +267,37 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                     return;
                 // Compute the last throughput
                 long measuredRequests = 0;
+                // Compute cumulative request counts by transaction type
+                Map<TransactionType, Integer> totalsByTransactionType = new HashMap<TransactionType, Integer>();
+
+
                 synchronized (testState) {
                     for (Worker<?> w : workers) {
                         measuredRequests += w.getAndResetIntervalRequests();
+
+                        // DBAAS-3805 - calculate totals for each transaction type
+                        Map<TransactionType, AtomicInteger> workerTransCount = w.getTransactionTypeRequests();
+                        for (TransactionType t : workerTransCount.keySet()) {
+                            if (totalsByTransactionType.containsKey(t))
+                            {
+                                // accumulate by transaction type
+                                totalsByTransactionType.put(t, totalsByTransactionType.get(t) + workerTransCount.get(t).get());
+                            }
+                            else
+                            {
+                                //initialize
+                                totalsByTransactionType.put(t, workerTransCount.get(t).get());
+                            }
+                        }
                     }
                 }
                 double seconds = this.intervalMonitor / 1000d;
                 double tps = (double) measuredRequests / seconds;
-                LOG.info("Throughput: " + tps + " txn/sec");
+                LOG.info("Monitor -> Throughput: " + tps + " txn/sec");
+                for ( Entry<TransactionType,Integer> e: totalsByTransactionType.entrySet())
+                {
+                    LOG.info("Monitor -> " + e.getKey() + ": " + e.getValue() + " requests");
+                }
             } // WHILE
         }
     } // CLASS

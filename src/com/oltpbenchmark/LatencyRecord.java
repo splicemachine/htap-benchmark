@@ -46,7 +46,7 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 
 	}
 
-    public void addLatency(int transType, long startNs, long endNs, int workerId, int phaseId) {
+    public synchronized void addLatency(int transType, long startNs, long endNs, int workerId, int phaseId) {
 		assert lastNs > 0;
 		assert lastNs - 500 <= startNs;
 		assert endNs >= startNs;
@@ -76,7 +76,7 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 	}
 
 	/** Returns the number of recorded samples. */
-	public int size() {
+	public synchronized int size() {
 		// Samples stored in full chunks
 		int samples = (values.size() - 1) * ALLOC_SIZE;
 
