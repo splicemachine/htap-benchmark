@@ -19,6 +19,7 @@ package com.oltpbenchmark;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** Efficiently stores a record of (start time, latency) pairs. */
 public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
@@ -122,6 +123,7 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 		private int subIndex = 0;
 		private long lastIteratorNs = startNs;
 
+
 		@Override
 		public boolean hasNext() {
 			if (chunkIndex < values.size() - 1) {
@@ -164,7 +166,63 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 		}
 	}
 
+
+	private final class PartialLatencyRecordIterator implements Iterator<Sample> {
+		private int chunkIndex;
+		private int subIndex;
+		private int maxIndex;
+
+        public PartialLatencyRecordIterator(int start, int end)
+		{
+			int currentSize = size();
+			assert (start>=0) && (end>start) && (start < currentSize) && (end < currentSize);
+			chunkIndex = start / ALLOC_SIZE;
+			subIndex = start - (chunkIndex * ALLOC_SIZE);
+			maxIndex = end;
+
+		}
+
+		@Override
+		public boolean hasNext() {
+        	int nextIndex = chunkIndex * ALLOC_SIZE + subIndex;
+        	if (nextIndex <= maxIndex){
+        		return true;
+        	}
+        	else {
+				return false;
+			}
+
+		}
+
+		@Override
+		public Sample next() {
+			Sample[] chunk = values.get(chunkIndex);
+			Sample s = chunk[subIndex];
+
+			// Iterate in chunk, and wrap to next one
+			++subIndex;
+			assert subIndex <= ALLOC_SIZE;
+			if (subIndex == ALLOC_SIZE) {
+				chunkIndex += 1;
+				subIndex = 0;
+			}
+
+			// Previously, s.startNs was just an offset from the previous
+			// value.  Now we make it an absolute.
+//			s.startNs += lastIteratorNs;
+//			lastIteratorNs = s.startNs;
+
+			return s;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("remove is not supported");
+		}
+	}
+
 	public Iterator<Sample> iterator() {
 		return new LatencyRecordIterator();
 	}
+	public Iterator<Sample> partialIterator(int start, int end) {return new PartialLatencyRecordIterator(start, end); }
 }

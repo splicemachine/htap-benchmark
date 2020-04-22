@@ -271,6 +271,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 Map<TransactionType, Integer> totalsByTransactionType = new HashMap<TransactionType, Integer>();
 
 
+                ArrayList<LatencyRecord.Sample> partialSamples = new ArrayList<LatencyRecord.Sample>();
                 synchronized (testState) {
                     for (Worker<?> w : workers) {
                         measuredRequests += w.getAndResetIntervalRequests();
@@ -289,15 +290,35 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                                 totalsByTransactionType.put(t, workerTransCount.get(t).get());
                             }
                         }
+                        Iterator<LatencyRecord.Sample> iterator = w.getLatencyRecordsChunk();
+                        while ( iterator.hasNext()) {
+                            partialSamples.add(iterator.next());
+                        }
                     }
                 }
+
                 double seconds = this.intervalMonitor / 1000d;
                 double tps = (double) measuredRequests / seconds;
                 LOG.info("Monitor -> Throughput: " + tps + " txn/sec");
+
                 for ( Entry<TransactionType,Integer> e: totalsByTransactionType.entrySet())
                 {
                     LOG.info("Monitor -> " + e.getKey() + ": " + e.getValue() + " requests");
                 }
+
+                // log latency statistics for interval
+                // possible: sorting!
+                Collections.sort(partialSamples);
+
+                // Compute stats on all the latencies
+                int[] latencies = new int[partialSamples.size()];
+                for (int i = 0; i < partialSamples.size(); ++i) {
+                    latencies[i] = partialSamples.get(i).latencyUs;
+                }
+
+                DistributionStatistics stats = DistributionStatistics.computeStatistics(latencies);
+                LOG.info("Monitor -> Latencies:90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
+
             } // WHILE
         }
     } // CLASS

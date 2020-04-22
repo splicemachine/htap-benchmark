@@ -153,6 +153,18 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
         return latencies;
     }
 
+
+    // enable reading a portion of the latencies while worker is still active
+    private AtomicInteger latencyChunkStart = new AtomicInteger(0);
+
+    public final Iterator<LatencyRecord.Sample> getLatencyRecordsChunk()
+    {
+        int currentSize = latencies.size();
+        Iterator<LatencyRecord.Sample> result =latencies.partialIterator(latencyChunkStart.getAndSet(currentSize - 1), currentSize - 1);
+
+        return result;
+    }
+
     public final Procedure getProcedure(TransactionType type) {
         return (this.procedures.get(type));
     }
