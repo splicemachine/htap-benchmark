@@ -317,7 +317,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 }
 
                 DistributionStatistics stats = DistributionStatistics.computeStatistics(latencies);
-                LOG.info("Monitor -> Latencies:90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
+                LOG.info("Monitor -> Latencies:25="+stats.get25thPercentile()+",50="+stats.getMedian()+",75="+stats.get75thPercentile()+",90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
 
             } // WHILE
         }
