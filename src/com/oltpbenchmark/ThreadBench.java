@@ -272,6 +272,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
 
 
                 ArrayList<LatencyRecord.Sample> partialSamples = new ArrayList<LatencyRecord.Sample>();
+                int[] latencies;
                 synchronized (testState) {
                     for (Worker<?> w : workers) {
                         measuredRequests += w.getAndResetIntervalRequests();
@@ -295,6 +296,11 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                             partialSamples.add(iterator.next());
                         }
                     }
+                    // Compute stats on all the latencies
+                    latencies = new int[partialSamples.size()];
+                    for (int i = 0; i < partialSamples.size(); ++i) {
+                        latencies[i] = partialSamples.get(i).latencyUs;
+                    }
                 }
 
                 double seconds = this.intervalMonitor / 1000d;
@@ -304,16 +310,6 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 for ( Entry<TransactionType,Integer> e: totalsByTransactionType.entrySet())
                 {
                     LOG.info("Monitor -> " + e.getKey() + ": " + e.getValue() + " requests");
-                }
-
-                // log latency statistics for interval
-                // possible: sorting!
-                Collections.sort(partialSamples);
-
-                // Compute stats on all the latencies
-                int[] latencies = new int[partialSamples.size()];
-                for (int i = 0; i < partialSamples.size(); ++i) {
-                    latencies[i] = partialSamples.get(i).latencyUs;
                 }
 
                 DistributionStatistics stats = DistributionStatistics.computeStatistics(latencies);
