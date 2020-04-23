@@ -261,10 +261,13 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 try {
                     Thread.sleep(this.intervalMonitor);
                 } catch (InterruptedException ex) {
+                    LOG.info("Monitor Thread: Sleep interrupted.");
                     return;
                 }
-                if (testState == null)
+                if (testState == null) {
+                    LOG.info("Monitor Thread: testState is null.");
                     return;
+                }
                 // Compute the last throughput
                 long measuredRequests = 0;
                 // Compute cumulative request counts by transaction type
@@ -316,6 +319,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 LOG.info("Monitor -> Latencies:25="+stats.get25thPercentile()+",50="+stats.getMedian()+",75="+stats.get75thPercentile()+",90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
 
             } // WHILE
+            LOG.info("Monitor Thread : existing monitor loop.")
         }
     } // CLASS
     
