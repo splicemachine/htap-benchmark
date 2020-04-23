@@ -319,7 +319,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 LOG.info("Monitor -> Latencies:25="+stats.get25thPercentile()+",50="+stats.getMedian()+",75="+stats.get75thPercentile()+",90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
 
             } // WHILE
-            LOG.info("Monitor Thread : existing monitor loop.");
+
         }
     } // CLASS
     
