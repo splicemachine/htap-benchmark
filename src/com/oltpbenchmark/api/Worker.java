@@ -160,7 +160,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
     public final Iterator<LatencyRecord.Sample> getLatencyRecordsChunk()
     {
         int currentSize = latencies.size();
-        Iterator<LatencyRecord.Sample> result =latencies.partialIterator(latencyChunkStart.getAndSet(currentSize - 1), currentSize - 1);
+        Iterator<LatencyRecord.Sample> result =latencies.partialIterator(latencyChunkStart.getAndSet(currentSize), currentSize - 1);
 
         return result;
     }
