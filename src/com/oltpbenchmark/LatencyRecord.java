@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Efficiently stores a record of (start time, latency) pairs. */
 public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
-	/** Allocate space for 500k samples at a time */
-	static final int ALLOC_SIZE = 500000;
+	/** Allocate space for 128k samples at a time */
+	static final int ALLOC_SIZE = 1 << 17;
 
 	/**
 	 * Contains (start time, latency, transactionType, workerid, phaseid) pentiplets 
@@ -32,58 +32,30 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 	 * increments, starting from startNs. A 32-bit integer provides sufficient resolution
 	 * for an interval of 2146 seconds, or 35 minutes.
 	 */
-	private final ArrayList<Sample[]> values = new ArrayList<Sample[]>();
-	private int nextIndex;
+	private ArrayList<Sample[]> values;
+	private volatile int nextIndex;
 
-	private final long startNs;
-	private long lastNs;
-
-	public LatencyRecord(long startNs) {
-		assert startNs > 0;
-
-		this.startNs = startNs;
-		lastNs = startNs;
-		allocateChunk();
-
+	public LatencyRecord() {
+		nextIndex = 0;
+		values = new ArrayList<Sample[]>();
 	}
 
-    public synchronized void addLatency(int transType, long startNs, long endNs, int workerId, int phaseId) {
-		assert lastNs > 0;
-		assert lastNs - 500 <= startNs;
+    public void addLatency(int transType, long startNs, long endNs, int workerId, int phaseId) {
 		assert endNs >= startNs;
 
-		if (nextIndex == ALLOC_SIZE) {
-			allocateChunk();
+		int chunkIdx = nextIndex % ALLOC_SIZE;
+		if (chunkIdx == 0) {
+			values.add(new Sample[ALLOC_SIZE]);
 		}
-		Sample[] chunk = values.get(values.size() - 1);
-
-		long startOffsetNs = (startNs - lastNs + 500);
-		assert startOffsetNs >= 0;
+		Sample[] chunk = values.get(nextIndex / ALLOC_SIZE);
 		int latencyUs = (int) ((endNs - startNs + 500) / 1000);
-		assert latencyUs >= 0;
-
-		chunk[nextIndex] = new Sample(transType, startOffsetNs, latencyUs
-				, workerId, phaseId);
-		++nextIndex;
-
-		lastNs += startOffsetNs;
-	}
-
-	private void allocateChunk() {
-		assert (values.isEmpty() && nextIndex == 0)
-			|| nextIndex == ALLOC_SIZE;
-		values.add(new Sample[ALLOC_SIZE]);
-		nextIndex = 0;
+		chunk[chunkIdx] = new Sample(transType, startNs, latencyUs, workerId, phaseId);
+		nextIndex += 1;
 	}
 
 	/** Returns the number of recorded samples. */
-	public synchronized int size() {
-		// Samples stored in full chunks
-		int samples = (values.size() - 1) * ALLOC_SIZE;
-
-		// Samples stored in the last not full chunk
-		samples += nextIndex;
-		return samples;
+	public int size() {
+		return nextIndex;
 	}
 
 	/** Stores the start time and latency for a single sample. Immutable. */
@@ -102,7 +74,6 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 			this.phaseId = phaseId;
 		}
 
-		@Override
 		public int compareTo(Sample other) {
 			long diff = this.startNs - other.startNs;
 
@@ -118,111 +89,44 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
 		}
 	}
 
-	private final class LatencyRecordIterator implements Iterator<Sample> {
-		private int chunkIndex = 0;
-		private int subIndex = 0;
-		private long lastIteratorNs = startNs;
+	public final class LatencyRecordIterator implements Iterator<Sample> {
+		private int curIndex;
+		private int lastIndex;
 
+		LatencyRecordIterator() {
+			this(0, nextIndex);
+		}
 
-		@Override
+		LatencyRecordIterator(int start, int end) {
+			assert start <= end;
+			curIndex = start;
+			lastIndex = end;
+		}
+
 		public boolean hasNext() {
-			if (chunkIndex < values.size() - 1) {
-				return true;
-			}
-
-			assert chunkIndex == values.size() - 1;
-			if (subIndex < nextIndex) {
-				return true;
-			}
-
-			assert chunkIndex == values.size() - 1 && subIndex == nextIndex;
-			return false;
+			return curIndex < lastIndex;
 		}
 
-		@Override
 		public Sample next() {
-			Sample[] chunk = values.get(chunkIndex);
-			Sample s = chunk[subIndex];
-
-			// Iterate in chunk, and wrap to next one
-			++subIndex;
-			assert subIndex <= ALLOC_SIZE;
-			if (subIndex == ALLOC_SIZE) {
-				chunkIndex += 1;
-				subIndex = 0;
-			}
-
-			// Previously, s.startNs was just an offset from the previous
-			// value.  Now we make it an absolute.
-			s.startNs += lastIteratorNs;
-			lastIteratorNs = s.startNs;
-
-			return s;
+			Sample sample = values.get(curIndex / ALLOC_SIZE)[curIndex % ALLOC_SIZE];
+			curIndex += 1;
+			return sample;
 		}
 
-		@Override
 		public void remove() {
 			throw new UnsupportedOperationException("remove is not supported");
 		}
-	}
 
-
-	private final class PartialLatencyRecordIterator implements Iterator<Sample> {
-		private int chunkIndex;
-		private int subIndex;
-		private int maxIndex;
-
-        public PartialLatencyRecordIterator(int start, int end)
-		{
-			int currentSize = size();
-			assert (start>=0) && (end>start) && (start < currentSize) && (end < currentSize);
-			chunkIndex = start / ALLOC_SIZE;
-			subIndex = start - (chunkIndex * ALLOC_SIZE);
-			maxIndex = end;
-
-		}
-
-		@Override
-		public boolean hasNext() {
-        	int nextIndex = chunkIndex * ALLOC_SIZE + subIndex;
-        	if (nextIndex <= maxIndex){
-        		return true;
-        	}
-        	else {
-				return false;
-			}
-
-		}
-
-		@Override
-		public Sample next() {
-			Sample[] chunk = values.get(chunkIndex);
-			Sample s = chunk[subIndex];
-
-			// Iterate in chunk, and wrap to next one
-			++subIndex;
-			assert subIndex <= ALLOC_SIZE;
-			if (subIndex == ALLOC_SIZE) {
-				chunkIndex += 1;
-				subIndex = 0;
-			}
-
-			// Previously, s.startNs was just an offset from the previous
-			// value.  Now we make it an absolute.
-//			s.startNs += lastIteratorNs;
-//			lastIteratorNs = s.startNs;
-
-			return s;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException("remove is not supported");
+		public int size() {
+			return lastIndex - curIndex;
 		}
 	}
 
 	public Iterator<Sample> iterator() {
 		return new LatencyRecordIterator();
 	}
-	public Iterator<Sample> partialIterator(int start, int end) {return new PartialLatencyRecordIterator(start, end); }
+
+	public Iterator<Sample> iterator(int start, int end) {
+		return new LatencyRecordIterator(start, end);
+	}
 }

@@ -268,52 +268,46 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                     LOG.info("Monitor Thread: testState is null.");
                     return;
                 }
-                // Compute the last throughput
-                long measuredRequests = 0;
-                // Compute cumulative request counts by transaction type
-                Map<TransactionType, Integer> totalsByTransactionType = new HashMap<TransactionType, Integer>();
-
-
-                ArrayList<LatencyRecord.Sample> partialSamples = new ArrayList<LatencyRecord.Sample>();
+                // Compute stats for the elapsed interval
+                int measuredRequests = 0;
+                ArrayList<Iterator<Sample>> iterators = new ArrayList<Iterator<Sample>>();
                 synchronized (testState) {
                     for (Worker<?> w : workers) {
-                        measuredRequests += w.getAndResetIntervalRequests();
-
-                        // DBAAS-3805 - calculate totals for each transaction type
-                        Map<TransactionType, AtomicInteger> workerTransCount = w.getTransactionTypeRequests();
-                        for (TransactionType t : workerTransCount.keySet()) {
-                            if (totalsByTransactionType.containsKey(t))
-                            {
-                                // accumulate by transaction type
-                                totalsByTransactionType.put(t, totalsByTransactionType.get(t) + workerTransCount.get(t).get());
-                            }
-                            else
-                            {
-                                //initialize
-                                totalsByTransactionType.put(t, workerTransCount.get(t).get());
-                            }
-                        }
-                        Iterator<LatencyRecord.Sample> iterator = w.getLatencyRecordsChunk();
-                        while ( iterator.hasNext()) {
-                            partialSamples.add(iterator.next());
-                        }
+                        LatencyRecord.LatencyRecordIterator iterator = (LatencyRecord.LatencyRecordIterator)w.getLatencyRecordsChunk();
+                        iterators.add(iterator);
+                        measuredRequests += iterator.size();
                     }
-
                 }
 
                 double seconds = this.intervalMonitor / 1000d;
                 double tps = (double) measuredRequests / seconds;
                 LOG.info("Monitor -> Throughput: " + tps + " txn/sec");
 
-                for ( Entry<TransactionType,Integer> e: totalsByTransactionType.entrySet())
-                {
-                    LOG.info("Monitor -> " + e.getKey() + ": " + e.getValue() + " requests");
+                int[] latencies = new int[measuredRequests];
+                int[] counts = new int[128];
+                int idx = 0;
+                for (Iterator<Sample> iterator : iterators) {
+                    while (iterator.hasNext()) {
+                        Sample sample = iterator.next();
+                        latencies[idx++] = sample.latencyUs;
+                        int tranType = sample.tranType;
+                        if (tranType < 0) continue;
+                        if (tranType >= counts.length) {
+                            int[] newCounts = new int[tranType + 128];
+                            System.arraycopy(counts, 0, newCounts, 0, counts.length);
+                            counts = newCounts;
+                        }
+                        counts[tranType] += 1;
+                    }
                 }
-
-                // Compute stats on all the latencies
-                int[] latencies = new int[partialSamples.size()];
-                for (int i = 0; i < partialSamples.size(); ++i) {
-                    latencies[i] = partialSamples.get(i).latencyUs;
+                for (WorkloadConfiguration workConf : workConfs) {
+                    Iterator<TransactionType> iterator = workConf.getTransTypes().iterator();
+                    while (iterator.hasNext()) {
+                        TransactionType type = iterator.next();
+                        int typeId = type.getId();
+                        if (typeId < 0 || typeId == TransactionType.INVALID_ID || typeId >= counts.length) continue;
+                        LOG.info("Monitor -> " + type + ": " + counts[typeId] + " requests");
+                    }
                 }
                 DistributionStatistics stats = DistributionStatistics.computeStatistics(latencies);
                 LOG.info("Monitor -> Latencies:25="+stats.get25thPercentile()+",50="+stats.getMedian()+",75="+stats.get75thPercentile()+",90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());

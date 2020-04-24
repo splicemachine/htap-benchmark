@@ -12,7 +12,7 @@ if [[ $SOURCE == */database/* ]]; then
     if [[ $SCALE == "100" ]]; then
         backupid=2235534337
     elif [[ $SCALE == "1000" ]]; then
-        backupid=2826810625
+        backupid=1384221697
     elif [[ $SCALE == "10000" ]]; then
         backupid=39810049
     fi

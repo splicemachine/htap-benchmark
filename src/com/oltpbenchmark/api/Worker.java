@@ -48,7 +48,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
     // Interval requests used by the monitor
     private AtomicInteger intervalRequests = new AtomicInteger(0);
-    private Map<TransactionType, AtomicInteger> transactionTypeRequests = new HashMap<TransactionType, AtomicInteger>();
 
     private final int id;
     private final T benchmarkModule;
@@ -85,14 +84,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
             this.name_procedures.put(e.getKey().getName(), proc);
             this.class_procedures.put(proc.getClass(), proc);
             // e.getValue().generateAllPreparedStatements(this.conn);
-
         } // FOR
-
-        // DBAAS-3805 - initialize transaction type request counts
-        for (TransactionType t : this.transactionTypes)
-        {
-            transactionTypeRequests.put(t,new AtomicInteger(0));
-        }
     }
 
     /**
@@ -145,9 +137,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
     public final int getAndResetIntervalRequests() {
         return intervalRequests.getAndSet(0);
     }
-    public final Map<TransactionType, AtomicInteger> getTransactionTypeRequests(){
-        return transactionTypeRequests;
-    }
 
     public final Iterable<LatencyRecord.Sample> getLatencyRecords() {
         return latencies;
@@ -155,13 +144,13 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
 
 
     // enable reading a portion of the latencies while worker is still active
-    private AtomicInteger latencyChunkStart = new AtomicInteger(0);
+    private int latencyChunkStart = 0;
 
     public final Iterator<LatencyRecord.Sample> getLatencyRecordsChunk()
     {
         int currentSize = latencies.size();
-        Iterator<LatencyRecord.Sample> result =latencies.partialIterator(latencyChunkStart.getAndSet(currentSize), currentSize - 1);
-
+        Iterator<LatencyRecord.Sample> result = latencies.iterator(latencyChunkStart, currentSize);
+        latencyChunkStart = currentSize;
         return result;
     }
 
@@ -222,7 +211,7 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
         t.setName(this.toString());
 
         // In case of reuse reset the measurements
-        latencies = new LatencyRecord(wrkldState.getTestStartNs());
+        latencies = new LatencyRecord();
 
         // Invoke the initialize callback
         try {
@@ -339,10 +328,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
                     if (preState == State.MEASURE && type != null && this.wrkldState.getCurrentPhase().id == phase.id) {
                         latencies.addLatency(type.getId(), start, end, this.id, phase.id);
                         intervalRequests.incrementAndGet();
-
-                        // record count for each transaction Type DBAAS-3805
-                        AtomicInteger reqCount = transactionTypeRequests.get(type);
-                        reqCount.incrementAndGet();
                     }
                     if (phase.isLatencyRun())
                         this.wrkldState.startColdQuery();
