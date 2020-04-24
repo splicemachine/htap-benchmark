@@ -218,7 +218,7 @@ public class TPCHLoader extends Loader<TPCHBenchmark> {
             conn.rollback();
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            e.printStackTrace();
             conn.rollback();
         } // end try
 
@@ -502,16 +502,16 @@ public class TPCHLoader extends Loader<TPCHBenchmark> {
                     LOG.debug(se.getMessage());
                     conn.rollback();
                 } catch (FileNotFoundException e) {
-                    e.printStackTrace(System.err);
+                    e.printStackTrace();
                 }  catch (Exception e) {
-                    e.printStackTrace(System.err);
+                    e.printStackTrace();
                     conn.rollback();
                 } finally {
                     if (br != null){
                         try {
                             br.close();
                         } catch (IOException e) {
-                            e.printStackTrace(System.err);
+                            e.printStackTrace();
                         }
                     }
                 }

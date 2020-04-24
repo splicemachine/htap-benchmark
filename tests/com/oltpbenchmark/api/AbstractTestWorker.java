@@ -89,7 +89,7 @@ public abstract class AbstractTestWorker<T extends BenchmarkModule> extends Abst
                 // These are expected, so they can be ignored
                 // Anything else is a serious error
             } catch (Throwable ex) {
-//                ex.printStackTrace(System.err);
+//                ex.printStackTrace();
                  throw new RuntimeException("Failed to execute " + txnType, ex);
             }
             conn.commit();

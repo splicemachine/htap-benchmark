@@ -208,7 +208,7 @@ public class WorkloadState {
                try {
                    this.wait();
                } catch (InterruptedException e) {
-                   e.printStackTrace(System.err);
+                   e.printStackTrace();
                }
            }
        }

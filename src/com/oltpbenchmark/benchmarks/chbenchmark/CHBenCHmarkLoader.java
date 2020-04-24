@@ -96,7 +96,7 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 				conn.rollback();
 
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				e.printStackTrace();
 				conn.rollback();
 
 			} // end try
@@ -211,16 +211,16 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 			conn.rollback();
 		
 		} catch (FileNotFoundException e) {
-		    e.printStackTrace(System.err);
+		    e.printStackTrace();
 		}  catch (Exception e) {
-            e.printStackTrace(System.err);
+            e.printStackTrace();
             conn.rollback();
 		} finally {
 		    if (br != null){
 		        try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace(System.err);
+                    e.printStackTrace();
                 }
 		    }
 		}
@@ -321,16 +321,16 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 			LOG.debug(se.getMessage());
 			conn.rollback();
 		} catch (FileNotFoundException e) {
-            e.printStackTrace(System.err);
+            e.printStackTrace();
         }  catch (Exception e) {
-            e.printStackTrace(System.err);
+            e.printStackTrace();
             conn.rollback();
         } finally {
             if (br != null){
                 try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace(System.err);
+                    e.printStackTrace();
                 }
             }
         }
@@ -433,7 +433,7 @@ public class CHBenCHmarkLoader extends Loader<CHBenCHmark> {
 			LOG.debug(se.getMessage());
 			conn.rollback();
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 			conn.rollback();
 		}
 
