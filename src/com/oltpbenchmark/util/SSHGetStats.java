@@ -135,7 +135,7 @@ public class SSHGetStats {
 			if (line != null)
 				return Long.parseLong(line);
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		return -1;
 	}
@@ -210,7 +210,7 @@ public class SSHGetStats {
 			if (line != null)
 				return Integer.parseInt(line);
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		return -1;
 	}
@@ -245,7 +245,7 @@ public class SSHGetStats {
 
 			return diskstats;
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -257,7 +257,7 @@ public class SSHGetStats {
 			conn.close();
 
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 			System.exit(2);
 		}
 

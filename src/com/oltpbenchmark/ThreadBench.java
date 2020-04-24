@@ -19,15 +19,9 @@ package com.oltpbenchmark;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections15.map.ListOrderedMap;
 import org.apache.log4j.Logger;
@@ -267,21 +261,65 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
                 try {
                     Thread.sleep(this.intervalMonitor);
                 } catch (InterruptedException ex) {
+                    LOG.info("Monitor Thread: Sleep interrupted.");
                     return;
                 }
-                if (testState == null)
+                if (testState == null) {
+                    LOG.info("Monitor Thread: testState is null.");
                     return;
+                }
                 // Compute the last throughput
                 long measuredRequests = 0;
+                // Compute cumulative request counts by transaction type
+                Map<TransactionType, Integer> totalsByTransactionType = new HashMap<TransactionType, Integer>();
+
+
+                ArrayList<LatencyRecord.Sample> partialSamples = new ArrayList<LatencyRecord.Sample>();
                 synchronized (testState) {
                     for (Worker<?> w : workers) {
                         measuredRequests += w.getAndResetIntervalRequests();
+
+                        // DBAAS-3805 - calculate totals for each transaction type
+                        Map<TransactionType, AtomicInteger> workerTransCount = w.getTransactionTypeRequests();
+                        for (TransactionType t : workerTransCount.keySet()) {
+                            if (totalsByTransactionType.containsKey(t))
+                            {
+                                // accumulate by transaction type
+                                totalsByTransactionType.put(t, totalsByTransactionType.get(t) + workerTransCount.get(t).get());
+                            }
+                            else
+                            {
+                                //initialize
+                                totalsByTransactionType.put(t, workerTransCount.get(t).get());
+                            }
+                        }
+                        Iterator<LatencyRecord.Sample> iterator = w.getLatencyRecordsChunk();
+                        while ( iterator.hasNext()) {
+                            partialSamples.add(iterator.next());
+                        }
                     }
+
                 }
+
                 double seconds = this.intervalMonitor / 1000d;
                 double tps = (double) measuredRequests / seconds;
-                LOG.info("Throughput: " + tps + " txn/sec");
+                LOG.info("Monitor -> Throughput: " + tps + " txn/sec");
+
+                for ( Entry<TransactionType,Integer> e: totalsByTransactionType.entrySet())
+                {
+                    LOG.info("Monitor -> " + e.getKey() + ": " + e.getValue() + " requests");
+                }
+
+                // Compute stats on all the latencies
+                int[] latencies = new int[partialSamples.size()];
+                for (int i = 0; i < partialSamples.size(); ++i) {
+                    latencies[i] = partialSamples.get(i).latencyUs;
+                }
+                DistributionStatistics stats = DistributionStatistics.computeStatistics(latencies);
+                LOG.info("Monitor -> Latencies:25="+stats.get25thPercentile()+",50="+stats.getMedian()+",75="+stats.get75thPercentile()+",90="+stats.get90thPercentile()+",95="+stats.get95thPercentile()+",99="+stats.get99thPercentile());
+
             } // WHILE
+
         }
     } // CLASS
     
