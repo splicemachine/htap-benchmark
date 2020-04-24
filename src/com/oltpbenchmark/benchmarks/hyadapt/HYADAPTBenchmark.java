@@ -72,7 +72,7 @@ public class HYADAPTBenchmark extends BenchmarkModule {
             LOG.info("Init Record Count :: " + init_record_count);
         } catch (SQLException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace(System.err);
+            e.printStackTrace();
         }
         
         return workers;

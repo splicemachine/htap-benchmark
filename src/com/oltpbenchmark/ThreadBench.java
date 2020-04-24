@@ -818,7 +818,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
         //
 
         // HERE WE HANDLE THE CASE IN WHICH ONE OF OUR WOKERTHREADS DIED
-        e.printStackTrace(System.err);
+        e.printStackTrace();
         System.exit(-1);
 
         /*

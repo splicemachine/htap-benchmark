@@ -39,7 +39,7 @@ public abstract class IntegrityConstraint implements Serializable{
 		try {
 			throw new NotImplementedException("The clone method should be implemented in the subtypes!");
 		} catch (NotImplementedException e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		return null;	
 	}

@@ -50,7 +50,7 @@ public class NoOpWorker extends Worker<NoOpBenchmark> {
             if (LOG.isDebugEnabled())
                 LOG.debug("Successfully completed " + this.procNoOp + " execution!");
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            ex.printStackTrace();
             System.exit(1);
         }
         
