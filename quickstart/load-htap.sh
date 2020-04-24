@@ -9,7 +9,9 @@ if [[ $SOURCE == */database/* ]]; then
     echo "restore htap-$SCALE"
     cp template-restore.sql restore-htap.sql
     backupid=undefined
-    if [[ $SCALE == "1000" ]]; then
+    if [[ $SCALE == "100" ]]; then
+        backupid=2235534337
+    elif [[ $SCALE == "1000" ]]; then
         backupid=2826810625
     elif [[ $SCALE == "10000" ]]; then
         backupid=39810049
