@@ -1,6 +1,9 @@
 #!/bin/bash
 
-source config.sh
+BIN_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+pushd "$BIN_DIR" > /dev/null
+
+source ./config.sh
 
 echo 'drop htap'
 
@@ -9,4 +12,5 @@ echo 'connecting to:' $url
 
 $SPLICE_HOME/sqlshell.sh -U $url -f drop-htap.sql
 
+popd > /dev/null
 echo 'done'

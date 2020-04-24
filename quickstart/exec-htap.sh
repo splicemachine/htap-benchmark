@@ -37,6 +37,6 @@ mkdir -p results
 session=htap-${SCALE}_${CWORKERS}_${HWORKERS}
 ./oltpbenchmark -b 'tpcc,chbenchmark' -c quickstart/config.xml --execute=true -im $IM -s $SW -ss -o $session | tee results/$session.out
 
-popd
+popd > /dev/null
 echo 'done'
 
