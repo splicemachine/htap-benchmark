@@ -6,6 +6,9 @@ SPLICE_HOST='localhost'
 SPLICE_PORT=1527
 SPLICE_USERNAME=splice
 SPLICE_PSWD=admin
+KERBEROS=false
+KERBEROS_PRINCIPAL=splice@SPLICEMACHINE.COLO
+KERBEROS_KEYTAB=/tmp/splice.keytab
 
 # choose the data set scale factor: 2, 25, 250, 1000, 10k
 SCALE=1000
