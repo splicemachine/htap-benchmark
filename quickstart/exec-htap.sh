@@ -18,10 +18,10 @@ done
 echo "execute htap-$SCALE benchmark, time: $TIME  tpcc: $CWORKERS  chbenchmark: $HWORKERS"
 # Write config file (use Mac/Linux compatible 'sed -i')
 cp template-config.xml config.xml
-if [[ "${KERBEROS}" -eq "true" ]];
-   then url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;principal=${KERBEROS_PRINCIPAL};keytab=${KERBEROS_KEYTAB}"
+if [[ "${KERBEROS}" == "true" ]]; then 
+   url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;principal=${KERBEROS_PRINCIPAL};keytab=${KERBEROS_KEYTAB}"
 else
-   url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;user=$SPLICE_USERNAME;password=$SPLICE_PSWD"
+   url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb"
 fi
 
 sed -i.bak -e "s%###SPLICE_URL###%$url%g" config.xml
