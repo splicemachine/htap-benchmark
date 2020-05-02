@@ -5,8 +5,8 @@ pushd "$BIN_DIR" > /dev/null
 
 source ./config.sh
 
-if [[ "${KERBEROS}" -eq "true" ]];
-   then url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;principal=${KERBEROS_PRINCIPAL};keytab=${KERBEROS_KEYTAB}"
+if [[ "${KERBEROS}" == "true" ]]; then
+   url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;principal=${KERBEROS_PRINCIPAL};keytab=${KERBEROS_KEYTAB}"
 else
    url="jdbc:splice://$SPLICE_HOST:$SPLICE_PORT/splicedb;user=$SPLICE_USERNAME;password=$SPLICE_PSWD"
 fi
