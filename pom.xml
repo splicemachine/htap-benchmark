@@ -8,47 +8,150 @@
   <artifactId>oltpbench</artifactId>
   <version>1.0</version>
   <packaging>jar</packaging>
+  
+  <repositories>
+        <repository>
+            <id>splicemachine</id>
+            <url>http://repository.splicemachine.com/nexus/content/repositories/releases</url>
+        </repository>
+  </repositories>
+  
+  <properties>
+    <splice.version>2.6.1.1736</splice.version>
+  </properties>
+    
   <build>
     <sourceDirectory>src</sourceDirectory>
     <resources>
       <resource>
-	<directory>src</directory>
-	<includes>
-	  <include>**/*.sql</include>
-	</includes>
+        <directory>src</directory>
+        <includes>
+            <include name="**/*-ddl.sql"/>
+                <include name="**/*-dialects.xml"/>
+                <include name="**/*.xsd"/>
+                <include name="**/histogram.*.gz"/>
+                <include name="**/table.*.gz"/>
+        </includes>
       </resource>
     </resources>
     <plugins>
+    	<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+		</plugin>
+		<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>.</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+		</plugin>
+		<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<includeScope>runtime</includeScope>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
       <!-- In addition to the standard JAR file,this will create an executable 
-	   JAR with dependencies -->
+       JAR with dependencies -->
       <plugin>
-	<artifactId>maven-assembly-plugin</artifactId>
-	<configuration>
-	  <archive>
-	    <manifest>
-	      <mainClass>com.oltpbenchmark.DBWorkload</mainClass>
-	    </manifest>
-	  </archive>
-	  <descriptorRefs>
-	    <descriptorRef>jar-with-dependencies</descriptorRef>
-	  </descriptorRefs>
-	</configuration>
-	<executions>
-	  <execution>
-	    <phase>package</phase>
-	    <goals>
-	      <goal>single</goal>
-	    </goals>
-	  </execution>
-	</executions>
+      	<groupId>org.apache.maven.plugins</groupId>
+    	<artifactId>maven-assembly-plugin</artifactId>
+    	<version>3.0.0</version>
+    <configuration>
+      <archive>
+        <manifest>
+          <mainClass>com.oltpbenchmark.DBWorkload</mainClass>
+        </manifest>
+      </archive>
+      <appendAssemblyId>false</appendAssemblyId>
+	<descriptors>
+		<descriptor>assembly/assembly.xml</descriptor>
+	</descriptors>
+      <descriptorRefs>
+        <descriptorRef>jar-with-dependencies</descriptorRef>
+      </descriptorRefs>
+    </configuration>
+    <executions>
+      <execution>
+      	<id>assembly</id>
+        <phase>package</phase>
+        <goals>
+          <goal>single</goal>
+        </goals>
+      </execution>
+    </executions>
       </plugin>
     </plugins>
   </build>
+  
+  
   <dependencies>
+  <!-- splice built dependencies -->
+  <!--
+	<dependency>
+			<groupId>com.splicemachine</groupId>
+			<artifactId>db-tools-ij</artifactId>
+			<version>${splice.version}</version>
+	</dependency>
+	<dependency>
+			<groupId>com.splicemachine</groupId>
+			<artifactId>db-client</artifactId>
+			<version>${splice.version}</version>
+	</dependency>
+	-->
+	<!-- third party dependencies -->
+
     <dependency>
-	<groupId>org.hsqldb</groupId>
-	<artifactId>hsqldb-j5</artifactId>
-	<version>2.0.0</version>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.11</version>
+        <scope>test</scope>
+    </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+            <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+    <dependency>
+    <groupId>org.hsqldb</groupId>
+    <artifactId>hsqldb-j5</artifactId>
+    <version>2.0.0</version>
     </dependency>
     <dependency>
       <groupId>javax.persistence</groupId>
@@ -140,15 +243,28 @@
       <artifactId>commons-io</artifactId>
       <version>2.2</version>
     </dependency>
-                
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.4.1209</version>
+        </dependency>    
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.46</version>
+    </dependency>
+  
     <!--
-	Because this isn't an open source jar this is required:
+    Because this isn't an open source jar this is required:
     $ mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc14 -Dversion=10.2.0.1.0 -Dpackaging=jar -Dfile=lib/ojdbc14-10.2.jar -DgeneratePom=true
 -->
+   <!--
     <dependency>
       <groupId>com.oracle</groupId>
       <artifactId>ojdbc14</artifactId>
       <version>10.2.0.1.0</version>
     </dependency>
+  -->
   </dependencies>
 </project>
