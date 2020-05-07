@@ -12,9 +12,7 @@ import java.sql.SQLException;
 import java.sql.DriverManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
 
@@ -157,7 +155,7 @@ public class SpliceHtapSchema {
             return success; //exit early if we can't find the driver
         }
 
-        try(Connection conn = DriverManager.getConnection(jdbcurl)) {
+        try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
             Statement stmt = null;
             try {
 
@@ -384,7 +382,7 @@ public class SpliceHtapSchema {
             return success; //exit early if we can't find the driver
         }
 
-        try(Connection conn = DriverManager.getConnection(jdbcurl)) {
+        try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
             Statement stmt = null;
             CallableStatement cs = null;
             try {
@@ -408,12 +406,15 @@ public class SpliceHtapSchema {
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.VACUUM()}");
                 cs.executeQuery();
+                cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_DROP_USER('" + user + "')}");
                 cs.executeQuery();
+                cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_UPDATE_ALL_SYSTEM_PROCEDURES()}");
                 cs.executeQuery();
+                cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_EMPTY_STATEMENT_CACHE()}");
                 cs.executeQuery();
@@ -449,43 +450,54 @@ public class SpliceHtapSchema {
             return success; //exit early if we can't find the driver
         }
 
-        try(Connection conn = DriverManager.getConnection(jdbcurl)) {
+        try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
             Statement stmt = null;
             CallableStatement cs = null;
             try {
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'WAREHOUSE',  null, '" + directory + "/warehouse.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'STOCK',      null, '" + directory + "/stock.csv',      null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'CUSTOMER',   null, '" + directory + "/customer.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'DISTRICT',   null, '" + directory + "/district.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'HISTORY',    null, '" + directory + "/history.csv',    null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ITEM',       null, '" + directory + "/item.csv',       null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NEW_ORDER',  null, '" + directory + "/new_order.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'OORDER',     null, '" + directory + "/oorder.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ORDER_LINE', null, '" + directory + "/order_line.csv', null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'REGION',     null, '" + directory + "/region.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NATION',     null, '" + directory + "/nation.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
+                cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'SUPPLIER',   null, '" + directory + "/supplier.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
                 cs.setString(1, schema);
                 cs.executeQuery();
@@ -521,7 +533,7 @@ public class SpliceHtapSchema {
             return success; //exit early if we can't find the driver
         }
 
-        try(Connection conn = DriverManager.getConnection(jdbcurl)) {
+        try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
             PreparedStatement ps = null;
             Statement stmt = null;
             CallableStatement cs = null;
@@ -579,7 +591,7 @@ public class SpliceHtapSchema {
             return success; //exit early if we can't find the driver
         }
 
-        try(Connection conn = DriverManager.getConnection(jdbcurl)) {
+        try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
             PreparedStatement ps = null;
             Statement stmt = null;
             CallableStatement cs = null;
@@ -593,6 +605,7 @@ public class SpliceHtapSchema {
                 cs.setString(1, schema);
                 cs.setString(2, user);
                 cs.executeQuery();
+                cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_RESTORE_SCHEMA(?,?,?,?,?);}");
                 cs.setString(1, schema);

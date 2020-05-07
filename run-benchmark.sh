@@ -183,14 +183,14 @@ eval set -- "$PARAMS"
 #
 FULL_JDBC_URL="${JDBC_URL};user=${SPLICE_USER};password=${SCHEMA_PASSWORD}"
 
-if [[ "$ACTION" = "create"]]; then
+if [[ "$ACTION" = "create" ]]; then
   if [ -z "$DATA_DIRECTORY" ]
   then
         DATA_DIRECTORY="s3a://splice-benchmark-data/flat/HTAP/htap-${SCALE}"
   fi
 fi
 
-if [[ "$ACTION" = "restore"]]; then
+if [[ "$ACTION" = "restore" ]]; then
   if [ -z "$BACKUP_DIRECTORY" ]
   then
         BACKUP_DIRECTORY="s3a://splice-benchmark-data/database/HTAP/$SCALE"
@@ -250,36 +250,54 @@ export WEIGHTS=${WEIGHTS}
 #
 envsubst < "$WORK_DIR/template-config.xml" > $WORK_DIR/config.xml
 
+ HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
+
 #
 # Restore the htap schema
 #
-if [[ "$ACTION" = "create"]]; then
-   HTAP_CLASSPATH=$(echo $WORK_DIR/lib/*.jar | tr ' ' ':')
+if [[ "$ACTION" = "create" ]]; then
   java -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.SpliceHtapSchema -a "$ACTION" -j "$FULL_JDBC_URL" -s "$SCHEMA_NAME" -u "$SCHEMA_USER" -p "$SCHEMA_PASSWORD" -d "$DATA_DIRECTORY"
+  STATUS=$?
+  if [[ "$STATUS" != "0" ]]; then
+    echo "There was a problem creating the database"
+    exit 1
+  fi
 fi
 
 #
 # Restore the htap schema
 #
-if [[ "$ACTION" = "restore"]]; then
-   HTAP_CLASSPATH=$(echo $WORK_DIR/lib/*.jar | tr ' ' ':')
+if [[ "$ACTION" = "restore" ]]; then
   java -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.SpliceHtapSchema -a "$ACTION" -j "$FULL_JDBC_URL" -s "$SCHEMA_NAME" -u "$SCHEMA_USER" -p "$SCHEMA_PASSWORD" -m "$RESTORE_SOURCE_SCHEMA" -b "$BACKUP_DIRECTORY" -i "$BACKUP_ID"
+  STATUS=$?
+  if [[ "$STATUS" != "0" ]]; then
+    echo "There was a problem restoring the database"
+    exit 1
+  fi
 fi
 
 #
 # Destroy the htap schema and objects
 #
-if [[ "$DESTROY" = "destroy"]]; then
-   HTAP_CLASSPATH=$(echo $WORK_DIR/lib/*.jar | tr ' ' ':')
+if [[ "$DESTROY" = "destroy" ]]; then
   java -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.SpliceHtapSchema -a "$ACTION" -j "$FULL_JDBC_URL" -s "$SCHEMA_NAME" -u "$SCHEMA_USER"
+  STATUS=$?
+  if [[ "$STATUS" != "0" ]]; then
+    echo "There was a problem destroying the database"
+    exit 1
+  fi
 fi
 
 #
 # Execute the HTAP benchmark
 #
-if [[ "$EXECUTE" = "true"]]; then
+if [[ "$EXECUTE" = "true" ]]; then
   export JSCOPE_CONFIG=/tmp
   SESSION=htap-${SCALE}_${CWORKERS}_${HWORKERS}
-  HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
   java -Xmx31G -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.DBWorkload -b 'tpcc,chbenchmark' -c $WORK_DIR/config.xml --execute=true -im $IM -s $SW -ss -o $SESSION 
+  STATUS=$?
+  if [[ "$STATUS" != "0" ]]; then
+    echo "There was a problem running the benchmark"
+    exit 1
+  fi
 fi

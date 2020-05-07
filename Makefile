@@ -12,12 +12,15 @@ build:
 	-mvn -f pom.xml clean install
 	docker build --rm --build-arg splice_base_image_version=${SPLICE_BASE_IMAGE_VERSION} \
 		-t $(NAME):$(VERSION) .
+	docker tag $(NAME):$(VERSION) $(NAME):latest
 
 push:
 	docker push $(NAME):$(VERSION)
+	docker push $(NAME):latest
 
 clean:
 	-docker rmi $(NAME):$(VERSION)
+	-docker rmi $(NAME):latest
 
 realclean:
 	-docker kill $(shell docker ps -q)

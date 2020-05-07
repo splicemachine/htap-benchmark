@@ -9,7 +9,7 @@ RUN mkdir -p ${BENCHMARK_HOME} && yum -y install gettext
 ADD template-config.xml ${BENCHMARK_HOME}/
 ADD target/*.jar ${BENCHMARK_HOME}/target/
 ADD log4j.properties ${BENCHMARK_HOME}/
-
+ADD config/plugin.xml ${BENCHMARK_HOME}/config/
 ADD run-benchmark.sh ${BENCHMARK_HOME}/run-benchmark.sh
 
 WORKDIR ${BENCHMARK_HOME} 
