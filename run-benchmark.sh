@@ -35,7 +35,7 @@ show_usage() {
   echo
   echo -e "\t-y, --dataDirectory \t\tIf creating a database, the location of the import files.  Defaults to s3a://splice-benchmark-data/flat/HTAP/htap-$SCALE "
   echo
-  echo -e "\t-m, --work_time 3600\t\tThe work time.  It defaults to 3600. "
+  echo -e "\t-m, --work_time 3600\t\tThe work time.  It defaults to 300. "
   echo
   echo -e "\t-w, --weights \t\t\tComma delimited list of weights.  It defaults to \"45,43,4,4,4\". "
   echo
@@ -47,7 +47,7 @@ show_usage() {
   echo
   echo -e "\t-t, --tpch_sessions 1400\tTPCH Sessions  It defaults to 4. "
   echo
-  echo -e "\t-c, --tpch_sessions 1400\tTPCC Sessions  It defaults to 100. "
+  echo -e "\t-c, --tpch_sessions 1400\tTPCC Sessions  It defaults to 1. "
   echo
 }
 
@@ -72,8 +72,8 @@ DATA_DIRECTORY=""
 
 SCALE="100"
 HWORKERS="4"
-CWORKERS="100"
-WORK_TIME="3600"
+CWORKERS="1"
+WORK_TIME="300"
 WEIGHTS="45,43,4,4,4"
 IM=10000	
 SW=300
@@ -207,6 +207,10 @@ if [[ "$ACTION" = "restore" ]]; then
   fi
 fi
 
+if [[ "$ACTION" = "destroy" ]]; then
+  EXECUTE="false"
+fi
+
 #
 # Print the variable values
 #
@@ -282,7 +286,7 @@ fi
 #
 # Destroy the htap schema and objects
 #
-if [[ "$DESTROY" = "destroy" ]]; then
+if [[ "$ACTION" = "destroy" ]]; then
   java -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.SpliceHtapSchema -a "$ACTION" -j "$FULL_JDBC_URL" -s "$SCHEMA_NAME" -u "$SCHEMA_USER"
   STATUS=$?
   if [[ "$STATUS" != "0" ]]; then

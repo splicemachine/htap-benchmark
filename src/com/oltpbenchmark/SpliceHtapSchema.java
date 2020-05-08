@@ -107,7 +107,7 @@ public class SpliceHtapSchema {
             spliceHtapDB.backupId = Long.parseLong(argsLine.getOptionValue("i"));
         } else if ("create".equals(action)) {
             spliceHtapDB.dataDirectory = argsLine.getOptionValue("d",spliceHtapDB.dataDirectory);
-        }
+        } 
 
         spliceHtapDB.processRequest(action);
     }
@@ -387,37 +387,43 @@ public class SpliceHtapSchema {
             CallableStatement cs = null;
             try {
 
+                System.out.println("Destroying database");
                 stmt = conn.createStatement();
-                stmt.executeUpdate("DROP VIEW " + schema + ".revenue0");
-                stmt.executeUpdate("DROP TABLE " + schema + ".region");
-                stmt.executeUpdate("DROP TABLE " + schema + ".nation");
-                stmt.executeUpdate("DROP TABLE " + schema + ".supplier");
-                stmt.executeUpdate("DROP TABLE " + schema + ".CUSTOMER");
-                stmt.executeUpdate("DROP TABLE " + schema + ".DISTRICT");
-                stmt.executeUpdate("DROP TABLE " + schema + ".HISTORY");
-                stmt.executeUpdate("DROP TABLE " + schema + ".ITEM");
-                stmt.executeUpdate("DROP TABLE " + schema + ".NEW_ORDER");
-                stmt.executeUpdate("DROP TABLE " + schema + ".OORDER");
-                stmt.executeUpdate("DROP TABLE " + schema + ".ORDER_LINE");
-                stmt.executeUpdate("DROP TABLE " + schema + ". STOCK");
-                stmt.executeUpdate("DROP TABLE " + schema + ". WAREHOUSE");
-                stmt.executeUpdate("DROP SCHEMA" + schema + " RESTRICT");
+
+                try {
+                    stmt.executeUpdate("DROP VIEW " + schema + ".revenue0");
+                } catch (Exception e) {
+                    //ignore
+                }
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".region");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".nation");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".supplier");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".CUSTOMER");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".DISTRICT");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".HISTORY");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".ITEM");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".NEW_ORDER");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".OORDER");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ".ORDER_LINE");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ". STOCK");
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + schema + ". WAREHOUSE");
+                stmt.executeUpdate("DROP SCHEMA " + schema + " RESTRICT");
                 stmt.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.VACUUM()}");
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_DROP_USER('" + user + "')}");
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_UPDATE_ALL_SYSTEM_PROCEDURES()}");
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_EMPTY_STATEMENT_CACHE()}");
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 success = true;
