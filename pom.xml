@@ -17,7 +17,7 @@
   </repositories>
   
   <properties>
-    <splice.version>2.6.1.1736</splice.version>
+    <splice.version>2.8.0.1944</splice.version>
   </properties>
     
   <build>
@@ -109,7 +109,6 @@
   
   <dependencies>
   <!-- splice built dependencies -->
-  <!--
 	<dependency>
 			<groupId>com.splicemachine</groupId>
 			<artifactId>db-tools-ij</artifactId>
@@ -120,7 +119,7 @@
 			<artifactId>db-client</artifactId>
 			<version>${splice.version}</version>
 	</dependency>
-	-->
+
 	<!-- third party dependencies -->
 
     <dependency>
