@@ -554,8 +554,8 @@ public class SpliceHtapSchema {
                     cs.setString(1, user);
                     cs.setString(2, password);
                     cs.execute();
+                    cs.close();
                 }
-                cs.close();
                 success = true;
 
             } catch (SQLException e) {
@@ -604,7 +604,7 @@ public class SpliceHtapSchema {
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_UPDATE_SCHEMA_OWNER(?,?)}");
                 cs.setString(1, schema);
                 cs.setString(2, user);
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_RESTORE_SCHEMA(?,?,?,?,?)}");
@@ -613,7 +613,7 @@ public class SpliceHtapSchema {
                 cs.setString(3, directory);
                 cs.setLong(4, backupId);
                 cs.setBoolean(5, validate);
-                cs.executeQuery();
+                cs.execute();
                 cs.close();
 
                 String createView = "CREATE view " + schema + ".revenue0 (supplier_no, total_revenue) AS "
