@@ -52,8 +52,22 @@ This fork includes a [Quick Start](https://github.com/splicemachine/htap-benchma
 
 You can run HTAP using a docker image as well.
 
+The following command will restore the HTAP database and then it will run the benchmark
+
 ```
-docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb"
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a restore
+```
+
+The following command will remove the HTAP database:
+
+```
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a destroy
+```
+
+If you prefer not to use the restored database, you can load it from flat files:
+
+```
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a create
 ```
 
 The parameters that can be used are:

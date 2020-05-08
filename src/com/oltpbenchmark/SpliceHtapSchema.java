@@ -311,6 +311,7 @@ public class SpliceHtapSchema {
                     + "r_comment char(152) not null, "
                     + "PRIMARY KEY ( r_regionkey ) "
                     + ") ";
+                stmt.executeUpdate(tableSql);
                   
                   tableSql = "create table " + schema + ".nation ( "
                     + "n_nationkey int not null, "
@@ -352,6 +353,8 @@ public class SpliceHtapSchema {
 
                 createIndex = "CREATE INDEX " + schema + ".OL_I_ID ON " + schema + ".ORDER_LINE (OL_W_ID, OL_D_ID, OL_I_ID, OL_O_ID)";
                 stmt.executeUpdate(createIndex);
+
+
 
                 stmt.close();
                 success = true;
@@ -445,6 +448,43 @@ public class SpliceHtapSchema {
         return success;
     }
 
+    public boolean compactAndGetStats(String jdbcurl, String schema, String user) {
+            boolean success = false;
+    
+            try{
+                //For the JDBC Driver 
+                Class.forName("com.splicemachine.db.jdbc.ClientDriver");
+            }catch(ClassNotFoundException cne){
+                cne.printStackTrace();
+                return success; //exit early if we can't find the driver
+            }
+    
+            try(Connection conn = java.sql.DriverManager.getConnection(jdbcurl)) {
+                CallableStatement cs = null;
+                try {
+                    cs = conn.prepareCall("{CALL SYSCS_UTIL.SYSCS_PERFORM_MAJOR_COMPACTION_ON_SCHEMA(?)}");
+                    cs.setString(1, schema);
+                    cs.close();
+
+                    cs = conn.prepareCall("{CALL SYSCS_UTIL.COLLECT_SCHEMA_STATISTICS( 'SPLICE', false );}");
+                    cs.execute();
+                    cs.close();
+                    success = true;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (cs != null) {
+                        cs.close();
+                    }
+                }
+                conn.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            } 
+
+            return success;
+    }
+
     public boolean loadData(String jdbcurl, String schema, String directory) {
         boolean success = false;
 
@@ -460,55 +500,54 @@ public class SpliceHtapSchema {
             Statement stmt = null;
             CallableStatement cs = null;
             try {
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'WAREHOUSE',  null, '" + directory + "/warehouse.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'WAREHOUSE',  null, '" + directory + "/warehouse.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
+                cs.setString(1, schema);
+                cs.close();
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'STOCK',      null, '" + directory + "/stock.csv',      null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
+                cs.setString(1, schema);
+                cs.close();
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'CUSTOMER',   null, '" + directory + "/customer.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'STOCK',      null, '" + directory + "/stock.csv',      null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'DISTRICT',   null, '" + directory + "/district.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'CUSTOMER',   null, '" + directory + "/customer.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'HISTORY',    null, '" + directory + "/history.csv',    null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'DISTRICT',   null, '" + directory + "/district.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ITEM',       null, '" + directory + "/item.csv',       null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'HISTORY',    null, '" + directory + "/history.csv',    null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NEW_ORDER',  null, '" + directory + "/new_order.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ITEM',       null, '" + directory + "/item.csv',       null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'OORDER',     null, '" + directory + "/oorder.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NEW_ORDER',  null, '" + directory + "/new_order.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ORDER_LINE', null, '" + directory + "/order_line.csv', null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'OORDER',     null, '" + directory + "/oorder.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'REGION',     null, '" + directory + "/region.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'ORDER_LINE', null, '" + directory + "/order_line.csv', null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NATION',     null, '" + directory + "/nation.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'REGION',     null, '" + directory + "/region.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
+                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'SUPPLIER',   null, '" + directory + "/supplier.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
                 cs.executeQuery();
                 cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'NATION',     null, '" + directory + "/nation.csv',     null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
-                cs.setString(1, schema);
-                cs.executeQuery();
-                cs.close();
-                cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'SUPPLIER',   null, '" + directory + "/supplier.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)");
-                cs.setString(1, schema);
-                cs.executeQuery();
-                cs.close();
-                success = true;
+
+                success = compactAndGetStats(jdbcurl, schema, user);
 
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -635,7 +674,7 @@ public class SpliceHtapSchema {
                 stmt.executeUpdate(createView);
 
                 stmt.close();
-                success = true;
+                success = compactAndGetStats(jdbcurl, schema, user);
 
             } catch (SQLException e) {
                 e.printStackTrace();

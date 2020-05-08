@@ -1,10 +1,10 @@
 #!/bin/bash
 
 usage() {
-  echo "Usage: $0 <-j jdbcurl>  [-c create {true}] [-r clear {false}] [-l load {true}] [-e execute {true}] [-g historgrams {true}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
+  echo "Usage: $0 [-j jdbc_url {jdbc:splice://localhost:1527/splicedb}]   [-a action {none}] [-e execute {true}] [-u user {splice}] [-p password {admin}] [-n schemaName {htap}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
   echo 
   echo "Examples: "
-  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic;user=splice;password=admin\""
+  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic;user=splice;password=admin\" -a restore"
   echo
 }
 
