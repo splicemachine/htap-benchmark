@@ -1,9 +1,5 @@
 #!/bin/bash
 
-
-echo $@
-
-
 usage() {
   echo "Usage: $0 <-j jdbcurl>  [-c create {true}] [-r clear {false}] [-l load {true}] [-e execute {true}] [-g historgrams {true}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
   echo 
