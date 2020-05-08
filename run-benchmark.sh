@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+echo $@
+
+
 usage() {
   echo "Usage: $0 <-j jdbcurl>  [-c create {true}] [-r clear {false}] [-l load {true}] [-e execute {true}] [-g historgrams {true}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
   echo 
@@ -181,7 +185,7 @@ eval set -- "$PARAMS"
 #
 # Setup values for empty variables
 #
-FULL_JDBC_URL="${JDBC_URL};user=${SPLICE_USER};password=${SCHEMA_PASSWORD}"
+FULL_JDBC_URL="${JDBC_URL};user=${SPLICE_USER};password=${SPLICE_PASSWORD}"
 
 if [[ "$ACTION" = "create" ]]; then
   if [ -z "$DATA_DIRECTORY" ]
@@ -250,8 +254,7 @@ export WEIGHTS=${WEIGHTS}
 #
 envsubst < "$WORK_DIR/template-config.xml" > $WORK_DIR/config.xml
 
- HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
-
+HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
 #
 # Restore the htap schema
 #
@@ -294,6 +297,7 @@ fi
 if [[ "$EXECUTE" = "true" ]]; then
   export JSCOPE_CONFIG=/tmp
   SESSION=htap-${SCALE}_${CWORKERS}_${HWORKERS}
+  
   java -Xmx31G -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.DBWorkload -b 'tpcc,chbenchmark' -c $WORK_DIR/config.xml --execute=true -im $IM -s $SW -ss -o $SESSION 
   STATUS=$?
   if [[ "$STATUS" != "0" ]]; then

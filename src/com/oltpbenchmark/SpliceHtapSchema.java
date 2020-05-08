@@ -541,7 +541,7 @@ public class SpliceHtapSchema {
 
                 boolean createUser = true;
                 ps = conn.prepareStatement("select USERNAME from SYS.SYSUSERS where USERNAME = ?");
-                ps.setString(1, user);
+                ps.setString(1, user.toUpperCase());
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
                     createUser = false;
@@ -550,10 +550,10 @@ public class SpliceHtapSchema {
                 ps.close();
 
                 if (createUser) {
-                    cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_CREATE_USER(?,?);}");
+                    cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_CREATE_USER(?,?)}");
                     cs.setString(1, user);
                     cs.setString(2, password);
-                    cs.executeQuery();
+                    cs.execute();
                 }
                 cs.close();
                 success = true;
@@ -601,13 +601,13 @@ public class SpliceHtapSchema {
                     return false;
                 }
 
-                cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_UPDATE_SCHEMA_OWNER(?,?);}");
+                cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_UPDATE_SCHEMA_OWNER(?,?)}");
                 cs.setString(1, schema);
                 cs.setString(2, user);
                 cs.executeQuery();
                 cs.close();
 
-                cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_RESTORE_SCHEMA(?,?,?,?,?);}");
+                cs = conn.prepareCall("{call SYSCS_UTIL.SYSCS_RESTORE_SCHEMA(?,?,?,?,?)}");
                 cs.setString(1, schema);
                 cs.setString(2, sourceSchema);
                 cs.setString(3, directory);
