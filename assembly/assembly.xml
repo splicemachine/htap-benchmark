@@ -13,6 +13,10 @@
 			<useProjectArtifact>true</useProjectArtifact>
 			<outputDirectory>lib</outputDirectory>
 			<unpack>false</unpack>
+			<scope>runtime</scope>
+			<excludes>
+				<exclude>hsqldb:hsqldb:jar:1.8.0.1</exclude>
+			</excludes>
 		</dependencySet>
 	</dependencySets>
 

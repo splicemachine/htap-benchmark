@@ -66,6 +66,7 @@
 						<configuration>
 							<outputDirectory>${project.build.directory}</outputDirectory>
 							<includeScope>runtime</includeScope>
+							<excludeTransitive>true</excludeTransitive>
 						</configuration>
 					</execution>
 				</executions>
@@ -104,9 +105,11 @@
 	</build>
 	<dependencies>
 		<!-- splice built dependencies -->
-		<!--
-	<dependency><groupId>com.splicemachine</groupId><artifactId>db-tools-ij</artifactId><version>${splice.version}</version></dependency><dependency><groupId>com.splicemachine</groupId><artifactId>db-client</artifactId><version>${splice.version}</version></dependency>
-	-->
+		<dependency>
+			<groupId>com.splicemachine</groupId>
+			<artifactId>db-client</artifactId>
+			<version>${splice.version}</version>
+		</dependency>
 		<!-- third party dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -130,10 +133,10 @@
 			<version>4.3.1</version>
 		</dependency>
 		<dependency>
-			<groupId>hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<version>1.8.0.1</version>
-		</dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb-j5</artifactId>
+			<version>2.0.0</version>
+    		</dependency>
 		<dependency>
 			<groupId>javax.persistence</groupId>
 			<artifactId>persistence-api</artifactId>
