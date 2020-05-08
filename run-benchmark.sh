@@ -215,7 +215,7 @@ fi
 # Print the variable values
 #
 echo "##### Splice Benchmark Harness HTAP:"
-echo -e "\tACTION=$CACTION"
+echo -e "\tACTION=$ACTION"
 echo -e "\tEXECUTE=$EXECUTE"
 echo
 echo -e "\tJDBC_URL=$JDBC_URL"
@@ -226,7 +226,7 @@ echo -e "\tSCHEMA_USER=$SCHEMA_USER"
 echo -e "\tSCHEMA_PASSWORD=$SCHEMA_PASSWORD"
 echo -e "\tRESTORE_SOURCE_SCHEMA=$RESTORE_SOURCE_SCHEMA"
 echo -e "\tBACKUP_DIRECTORY=$BACKUP_DIRECTORY"
-echo -e "\tBACKUP_ID=$CBACKUP_ID"
+echo -e "\tBACKUP_ID=$BACKUP_ID"
 echo -e "\tDATA_DIRECTORY=$DATA_DIRECTORY"
 echo
 echo -e "\tSCALE=$SCALE"
@@ -241,8 +241,8 @@ echo -e "\tSW=$SW"
 # Export variables to do variable replacement in config.xml
 #
 export SPLICE_URL=${JDBC_URL}
-export SPLICE_USER=${SPLICE_USER}
-export SPLICE_PASSWORD=${SPLICE_PASSWORD}
+export SPLICE_USER=${SCHEMA_USER}
+export SPLICE_PASSWORD=${SCHEMA_PASSWORD}
 export SCALE=${SCALE}
 export WORKERS_TPCC=${CWORKERS}
 export WORKERS_TPCH=${HWORKERS}
@@ -254,7 +254,11 @@ export WEIGHTS=${WEIGHTS}
 #
 envsubst < "$WORK_DIR/template-config.xml" > $WORK_DIR/config.xml
 
+#
+# Set classpath for 
+#
 HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
+
 #
 # Restore the htap schema
 #

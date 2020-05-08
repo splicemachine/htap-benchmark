@@ -335,22 +335,22 @@ public class SpliceHtapSchema {
 
                 String createView = "CREATE view " + schema + ".revenue0 (supplier_no, total_revenue) AS "
                     + "SELECT supplier_no, sum(cast(ol_amount as decimal(12,2))) as total_revenue "
-                    + "FROM order_line, "
-                    + "(SELECT s_suppkey AS supplier_no, s_i_id, s_w_id FROM stock) stocksupp "
+                    + "FROM " + schema + ".order_line, "
+                    + "(SELECT s_suppkey AS supplier_no, s_i_id, s_w_id FROM " + schema + ".stock) stocksupp "
                     + "WHERE ol_i_id = s_i_id "
                     + "AND ol_supply_w_id = s_w_id "
                     + "AND ol_delivery_d >= '2007-01-02 00:00:00.000000' "
                     + "GROUP BY supplier_no";
                 stmt.executeUpdate(createView);
 
-                String createIndex = "CREATE INDEX CUSTOMER_IX_CUSTOMER_NAME ON CUSTOMER(C_W_ID, C_D_ID, C_LAST, C_FIRST, C_MIDDLE, C_ID, C_STREET_1, C_STREET_2, C_CITY, "
+                String createIndex = "CREATE INDEX " + schema + ".CUSTOMER_IX_CUSTOMER_NAME ON " + schema + ".CUSTOMER(C_W_ID, C_D_ID, C_LAST, C_FIRST, C_MIDDLE, C_ID, C_STREET_1, C_STREET_2, C_CITY, "
                 + "C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT,C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE)";
                 stmt.executeUpdate(createIndex);
 
-                createIndex = "CREATE INDEX IDX_OORDER ON OORDER (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID, O_ENTRY_D)";
+                createIndex = "CREATE INDEX " + schema + ".IDX_OORDER ON " + schema + ".OORDER (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID, O_ENTRY_D)";
                 stmt.executeUpdate(createIndex);
 
-                createIndex = "CREATE INDEX OL_I_ID ON ORDER_LINE (OL_W_ID, OL_D_ID, OL_I_ID, OL_O_ID)";
+                createIndex = "CREATE INDEX " + schema + ".OL_I_ID ON " + schema + ".ORDER_LINE (OL_W_ID, OL_D_ID, OL_I_ID, OL_O_ID)";
                 stmt.executeUpdate(createIndex);
 
                 stmt.close();
@@ -618,8 +618,8 @@ public class SpliceHtapSchema {
 
                 String createView = "CREATE view " + schema + ".revenue0 (supplier_no, total_revenue) AS "
                     + "SELECT supplier_no, sum(cast(ol_amount as decimal(12,2))) as total_revenue "
-                    + "FROM order_line, "
-                    + "(SELECT s_suppkey AS supplier_no, s_i_id, s_w_id FROM stock) stocksupp "
+                    + "FROM " + schema + ".order_line, "
+                    + "(SELECT s_suppkey AS supplier_no, s_i_id, s_w_id FROM " + schema + ".stock) stocksupp "
                     + "WHERE ol_i_id = s_i_id "
                     + "AND ol_supply_w_id = s_w_id "
                     + "AND ol_delivery_d >= '2007-01-02 00:00:00.000000' "
