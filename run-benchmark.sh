@@ -1,14 +1,10 @@
 #!/bin/bash
 
-
-echo $@
-
-
 usage() {
-  echo "Usage: $0 <-j jdbcurl>  [-c create {true}] [-r clear {false}] [-l load {true}] [-e execute {true}] [-g historgrams {true}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
+  echo "Usage: $0 [-j jdbc_url {jdbc:splice://localhost:1527/splicedb}]   [-a action {none}] [-e execute {true}] [-u user {splice}] [-p password {admin}] [-n schemaName {htap}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
   echo 
   echo "Examples: "
-  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic;user=splice;password=admin\""
+  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic;user=splice;password=admin\" -a restore"
   echo
 }
 
@@ -39,7 +35,7 @@ show_usage() {
   echo
   echo -e "\t-y, --dataDirectory \t\tIf creating a database, the location of the import files.  Defaults to s3a://splice-benchmark-data/flat/HTAP/htap-$SCALE "
   echo
-  echo -e "\t-m, --work_time 3600\t\tThe work time.  It defaults to 3600. "
+  echo -e "\t-m, --work_time 3600\t\tThe work time.  It defaults to 300. "
   echo
   echo -e "\t-w, --weights \t\t\tComma delimited list of weights.  It defaults to \"45,43,4,4,4\". "
   echo
@@ -51,7 +47,7 @@ show_usage() {
   echo
   echo -e "\t-t, --tpch_sessions 1400\tTPCH Sessions  It defaults to 4. "
   echo
-  echo -e "\t-c, --tpch_sessions 1400\tTPCC Sessions  It defaults to 100. "
+  echo -e "\t-c, --tpch_sessions 1400\tTPCC Sessions  It defaults to 1. "
   echo
 }
 
@@ -76,8 +72,8 @@ DATA_DIRECTORY=""
 
 SCALE="100"
 HWORKERS="4"
-CWORKERS="100"
-WORK_TIME="3600"
+CWORKERS="1"
+WORK_TIME="300"
 WEIGHTS="45,43,4,4,4"
 IM=10000	
 SW=300
@@ -211,11 +207,15 @@ if [[ "$ACTION" = "restore" ]]; then
   fi
 fi
 
+if [[ "$ACTION" = "destroy" ]]; then
+  EXECUTE="false"
+fi
+
 #
 # Print the variable values
 #
 echo "##### Splice Benchmark Harness HTAP:"
-echo -e "\tACTION=$CACTION"
+echo -e "\tACTION=$ACTION"
 echo -e "\tEXECUTE=$EXECUTE"
 echo
 echo -e "\tJDBC_URL=$JDBC_URL"
@@ -226,7 +226,7 @@ echo -e "\tSCHEMA_USER=$SCHEMA_USER"
 echo -e "\tSCHEMA_PASSWORD=$SCHEMA_PASSWORD"
 echo -e "\tRESTORE_SOURCE_SCHEMA=$RESTORE_SOURCE_SCHEMA"
 echo -e "\tBACKUP_DIRECTORY=$BACKUP_DIRECTORY"
-echo -e "\tBACKUP_ID=$CBACKUP_ID"
+echo -e "\tBACKUP_ID=$BACKUP_ID"
 echo -e "\tDATA_DIRECTORY=$DATA_DIRECTORY"
 echo
 echo -e "\tSCALE=$SCALE"
@@ -241,8 +241,8 @@ echo -e "\tSW=$SW"
 # Export variables to do variable replacement in config.xml
 #
 export SPLICE_URL=${JDBC_URL}
-export SPLICE_USER=${SPLICE_USER}
-export SPLICE_PASSWORD=${SPLICE_PASSWORD}
+export SPLICE_USER=${SCHEMA_USER}
+export SPLICE_PASSWORD=${SCHEMA_PASSWORD}
 export SCALE=${SCALE}
 export WORKERS_TPCC=${CWORKERS}
 export WORKERS_TPCH=${HWORKERS}
@@ -254,7 +254,11 @@ export WEIGHTS=${WEIGHTS}
 #
 envsubst < "$WORK_DIR/template-config.xml" > $WORK_DIR/config.xml
 
+#
+# Set classpath for 
+#
 HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
+
 #
 # Restore the htap schema
 #
@@ -282,7 +286,7 @@ fi
 #
 # Destroy the htap schema and objects
 #
-if [[ "$DESTROY" = "destroy" ]]; then
+if [[ "$ACTION" = "destroy" ]]; then
   java -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.SpliceHtapSchema -a "$ACTION" -j "$FULL_JDBC_URL" -s "$SCHEMA_NAME" -u "$SCHEMA_USER"
   STATUS=$?
   if [[ "$STATUS" != "0" ]]; then
