@@ -33,6 +33,17 @@
 			<outputDirectory>quickstart</outputDirectory>
 			<useDefaultExcludes>true</useDefaultExcludes>
 		</fileSet>
+		<fileSet>
+			<directory>src</directory>
+			<outputDirectory>supportingfiles</outputDirectory>
+			<includes>
+ 				<include>**/*-dialects.xml</include>
+                                <include>**/*.xsd</include>
+                                <include>**/histogram.*.gz</include>
+                                <include>**/table.*.gz</include>
+                                <include name="**/table.*.gz"/>
+			</includes>
+		</fileSet>
 
 	</fileSets>
 
