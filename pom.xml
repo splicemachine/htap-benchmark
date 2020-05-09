@@ -24,6 +24,11 @@
 				<directory>src</directory>
 				<includes>
 					<include>**/*.sql</include>
+					<include>**/*-dialects.xml</include>
+					<include>**/*.xsd</include>
+					<include>**/histogram.*.gz</include>
+					<include>**/table.*.gz</include>
+                			<include name="**/table.*.gz"/>
 				</includes>
 			</resource>
 		</resources>
