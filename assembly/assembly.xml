@@ -59,7 +59,11 @@
                         <outputDirectory>.</outputDirectory>
 		</file>
 		<file>
-                        <source>run_htap_benchmark.sh</source>
+                        <source>template-config.xml</source>
+                        <outputDirectory>.</outputDirectory>
+		</file>
+		<file>
+                        <source>run-benchmark.sh</source>
                         <outputDirectory>.</outputDirectory>
 		</file>
         </files>

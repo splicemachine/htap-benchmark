@@ -466,7 +466,7 @@ public class SpliceHtapSchema {
                     cs.setString(1, schema);
                     cs.close();
 
-                    cs = conn.prepareCall("{CALL SYSCS_UTIL.COLLECT_SCHEMA_STATISTICS( 'SPLICE', false );}");
+                    cs = conn.prepareCall("{CALL SYSCS_UTIL.COLLECT_SCHEMA_STATISTICS( 'SPLICE', false )}");
                     cs.execute();
                     cs.close();
                     success = true;
