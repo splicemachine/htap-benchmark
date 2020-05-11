@@ -47,3 +47,69 @@ Please visit the project homepage for anything other than source code: <http://o
 ## Support for Splice Machine on CH-benCHmark
 
 This fork includes a [Quick Start](https://github.com/splicemachine/htap-benchmark/wiki) to get you up and running the CH-benCHmark with Splice Machine on OLTP-Bench. Enjoy! 
+
+## Running HTAP Using Docker
+
+You can run HTAP using a docker image as well.
+
+The following command will restore the HTAP database and then it will run the benchmark
+
+```
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a restore
+```
+
+The following command will remove the HTAP database:
+
+```
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a destroy
+```
+
+If you prefer not to use the restored database, you can load it from flat files:
+
+```
+docker run -t -v `pwd`:/logs splicemachine/benchmark_htap:0.0.1 -j "jdbc:splice://localhost:1527/splicedb" -a create
+```
+
+The parameters that can be used are:
+
+```
+	-a, --action false		The action you want to preform.  Valid values: create, destroy, restore, none.  It defaults to none. 
+
+	-e, --execute true		Execute the benchmark workload.  Valid values true / false.  It defaults to true. 
+
+	-j, --jdbc_url 			JDBC Url for the splice machine datbase.  It defaults to jdbc:splice://localhost:1527/splicedb 
+
+	-u, --user 			Splice Machine database user.  It defaults to splice 
+
+	-p, --password 			Splice Machine password.  It defaults to admin 
+
+	-n, --schemaName 		Htap Schema Name.  It defaults to htap 
+
+	-r, --schemaUser 		Htap Schema User.  It defaults to htap 
+
+	-o, --schemaUserPassword 	Htap Schema User password.  It defaults to htapuser 
+
+	-d, --restoreDirectory 		Restore directory if action is restore.  Defaults to s3a://splice-benchmark-data/database/HTAP/100 
+
+	-b, --backupId 			Backup id of the restored schema.  Defaults for scale 100 to 2235534337, scale 1000 to 1384221697 and scale 10000 to 39810049 
+
+	-x, --restoreSouceSchema 	Schema of the restored database.  Defaults to htap 
+
+	-y, --dataDirectory 		If creating a database, the location of the import files.  Defaults to s3a://splice-benchmark-data/flat/HTAP/htap-100 
+
+	-m, --work_time 3600		The work time.  It defaults to 3600. 
+
+	-w, --weights 			Comma delimited list of weights.  It defaults to "45,43,4,4,4". 
+
+	-s, --sample true		Sampling window.  Numeric value.  It defaults to 300. 
+
+	-i, --interval true		Throughput Monitoring Interval in milliseconds.  It defaults to 10000. 
+
+	-l, --scale 100			Scale.  It defaults to 100. 
+
+	-t, --tpch_sessions 1400	TPCH Sessions  It defaults to 4. 
+
+	-c, --tpch_sessions 1400	TPCC Sessions  It defaults to 100. 
+
+```
+
