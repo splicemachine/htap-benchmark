@@ -55,7 +55,6 @@ show_usage() {
 #
 # Define variables and their default values
 #
-#WORK_DIR="/opt/htap"
 WORK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 
@@ -259,7 +258,6 @@ envsubst < "$WORK_DIR/template-config.xml" > $WORK_DIR/config.xml
 #
 # Set classpath for 
 #
-#HTAP_CLASSPATH=$(echo $WORK_DIR/target/*.jar | tr ' ' ':')
 HTAP_CLASSPATH=$(echo $WORK_DIR/lib/*.jar | tr ' ' ':'):$WORK_DIR/supportingfiles
 
 
