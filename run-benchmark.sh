@@ -39,15 +39,13 @@ show_usage() {
   echo
   echo -e "\t-w, --weights \t\t\tComma delimited list of weights.  It defaults to \"45,43,4,4,4\". "
   echo
-  echo -e "\t-s, --sample true\t\tSampling window.  Numeric value.  It defaults to 300. "
-  echo
-  echo -e "\t-i, --interval true\t\tThroughput Monitoring Interval in milliseconds.  It defaults to 10000. "
+  echo -e "\t-i, --interval 1000\t\tThroughput Monitoring Interval in milliseconds.  It defaults to 10000. "
   echo
   echo -e "\t-l, --scale 100\t\t\tScale.  It defaults to 100. "
   echo
   echo -e "\t-t, --tpch_sessions 1400\tTPCH Sessions  It defaults to 4. "
   echo
-  echo -e "\t-c, --tpch_sessions 1400\tTPCC Sessions  It defaults to 1. "
+  echo -e "\t-c, --tpch\c_sessions 1400\tTPCC Sessions  It defaults to 1. "
   echo
 }
 
