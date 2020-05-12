@@ -4,7 +4,7 @@ usage() {
   echo "Usage: $0 [-j jdbc_url {jdbc:splice://localhost:1527/splicedb}]   [-a action {none}] [-e execute {true}] [-u user {splice}] [-p password {admin}] [-n schemaName {htap}] [-s sample {300}] [-w warehouses {10}] [-t terminals {10}] [-w work_time {600}] [-a rate limited {fales}] [-i weights {\"45,43,4,4,4\"}]"
   echo 
   echo "Examples: "
-  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic;user=splice;password=admin\" -a restore"
+  echo -e "\t ${0} -j \"jdbc:splice://localhost:1527/splicedb;ssl=basic\" -u splice -p admin -a restore"
   echo
 }
 
@@ -302,7 +302,7 @@ if [[ "$EXECUTE" = "true" ]]; then
   export JSCOPE_CONFIG=/tmp
   SESSION=htap-${SCALE}_${CWORKERS}_${HWORKERS}
   
-  java -Xmx31G -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.DBWorkload -b 'tpcc,chbenchmark' -c $WORK_DIR/config.xml --execute=true -im $IM -s $SW -ss -o $SESSION 
+  java -Xmx31G -cp $HTAP_CLASSPATH -Dlog4j.configuration=log4j.properties com.oltpbenchmark.DBWorkload -b 'tpcc,chbenchmark' -c $WORK_DIR/config.xml --execute=true -im $IM -s $SW -ss -o $SESSION | tee results/$SESSION.out
   STATUS=$?
   if [[ "$STATUS" != "0" ]]; then
     echo "There was a problem running the benchmark"
