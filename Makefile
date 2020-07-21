@@ -1,5 +1,5 @@
 NAME = splicemachine/benchmark_htap
-VERSION = 0.0.1
+VERSION = 0.0.2
 SPLICE_BASE_IMAGE_VERSION = 0.0.3
 .PHONY: all build clean push realclean
 

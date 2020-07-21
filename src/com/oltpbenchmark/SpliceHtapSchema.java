@@ -502,9 +502,11 @@ public class SpliceHtapSchema {
             try {
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'WAREHOUSE',  null, '" + directory + "/warehouse.csv',  null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
+		cs.executeQuery();
                 cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'STOCK',      null, '" + directory + "/stock.csv',      null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
+		cs.executeQuery();
                 cs.close();
                 cs = conn.prepareCall("{call SYSCS_UTIL.BULK_IMPORT_HFILE (?, 'CUSTOMER',   null, '" + directory + "/customer.csv',   null, '\"', 'yyyy-MM-dd HH:mm:ss', null, null, 5, '/tmp', true, null, '/tmp/HFILE', false)}");
                 cs.setString(1, schema);
