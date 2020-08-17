@@ -16,10 +16,7 @@
 
 package com.oltpbenchmark.benchmarks.tpcc.procedures;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -164,9 +161,30 @@ public class NewOrder extends TPCCProcedure {
 			itemIDs[numItems - 1] = TPCCConfig.INVALID_ITEM_ID;
 
 
-		newOrderTransaction(terminalWarehouseID, districtID,
+		boolean done = false;
+		while (!done) {
+			try {
+				newOrderTransaction(terminalWarehouseID, districtID,
 						customerID, numItems, allLocal, itemIDs,
 						supplierWarehouseIDs, orderQuantities, conn, w);
+			}
+			catch (SQLException ex) {
+				SQLException ex2 = ex;
+				if (ex2 instanceof BatchUpdateException) {
+					ex2 = ex2.getNextException();
+				}
+				if (ex2.getSQLState().equals("SE014")) {
+					// Retry write conflicts
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(ex2.getMessage());
+					}
+					conn.rollback();
+					continue;
+				}
+				throw ex;
+			}
+			done = true;
+		}
 		return null;
 
     }

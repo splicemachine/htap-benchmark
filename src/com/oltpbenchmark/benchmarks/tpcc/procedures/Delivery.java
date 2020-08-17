@@ -16,11 +16,7 @@
 
 package com.oltpbenchmark.benchmarks.tpcc.procedures;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -107,48 +103,70 @@ public class Delivery extends TPCCProcedure {
 			int w_id, int numWarehouses,
 			int terminalDistrictLowerID, int terminalDistrictUpperID,
 			TPCCWorker w) throws SQLException {
-		
-        boolean trace = LOG.isDebugEnabled();
-        int o_carrier_id = TPCCUtil.randomNumber(1, 10, gen);
-        Timestamp timestamp = w.getBenchmarkModule().getTimestamp(System.currentTimeMillis());
 
-		delivGetOrderId = this.getPreparedStatement(conn, delivGetOrderIdSQL);
-		delivDeleteNewOrder =  this.getPreparedStatement(conn, delivDeleteNewOrderSQL);
-		delivGetCustId = this.getPreparedStatement(conn, delivGetCustIdSQL);
-		delivUpdateCarrierId = this.getPreparedStatement(conn, delivUpdateCarrierIdSQL);
-		delivUpdateDeliveryDate = this.getPreparedStatement(conn, delivUpdateDeliveryDateSQL);
-		delivSumOrderAmount = this.getPreparedStatement(conn, delivSumOrderAmountSQL);
-		delivUpdateCustBalDelivCnt = this.getPreparedStatement(conn, delivUpdateCustBalDelivCntSQL);
+        int o_carrier_id = TPCCUtil.randomNumber(1, 10, gen);
+
+        delivGetOrderId = this.getPreparedStatement(conn, delivGetOrderIdSQL);
+        delivDeleteNewOrder = this.getPreparedStatement(conn, delivDeleteNewOrderSQL);
+        delivGetCustId = this.getPreparedStatement(conn, delivGetCustIdSQL);
+        delivUpdateCarrierId = this.getPreparedStatement(conn, delivUpdateCarrierIdSQL);
+        delivUpdateDeliveryDate = this.getPreparedStatement(conn, delivUpdateDeliveryDateSQL);
+        delivSumOrderAmount = this.getPreparedStatement(conn, delivSumOrderAmountSQL);
+        delivUpdateCustBalDelivCnt = this.getPreparedStatement(conn, delivUpdateCustBalDelivCntSQL);
+
+        boolean done = false;
+        while (!done) {
+            try {
+                deliveryTransaction(w_id, terminalDistrictLowerID, terminalDistrictUpperID, o_carrier_id, conn);
+            }
+            catch (SQLException ex) {
+                SQLException ex2 = ex;
+                if (ex2 instanceof BatchUpdateException) {
+                    ex2 = ex2.getNextException();
+                }
+                if (ex2.getSQLState().equals("SE014")) {
+                    // Retry write conflicts
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(ex2.getMessage());
+                    }
+                    conn.rollback();
+                    continue;
+                }
+                throw ex;
+            }
+            done = true;
+        }
+        return null;
+    }
+
+
+    private void deliveryTransaction(int w_id, int d_lo_id, int d_hi_id, int o_carrier_id, Connection conn) throws SQLException {
 
 		int d_id, c_id;
         float ol_total = 0;
         int[] orderIDs;
 
-        orderIDs = new int[10];
-        for (d_id = 1; d_id <= terminalDistrictUpperID; d_id++) {
+        orderIDs = new int[d_hi_id - d_lo_id + 1];
+        for (d_id = d_lo_id; d_id <= d_hi_id; d_id++) {
             delivGetOrderId.setInt(1, d_id);
             delivGetOrderId.setInt(2, w_id);
-            if (trace) LOG.trace("delivGetOrderId START");
             ResultSet rs = delivGetOrderId.executeQuery();
-            if (trace) LOG.trace("delivGetOrderId END");
             if (!rs.next()) {
                 // This district has no new orders
                 // This can happen but should be rare
-                if (trace) LOG.warn(String.format("District has no new orders [W_ID=%d, D_ID=%d]", w_id, d_id));
+                LOG.warn(String.format("District has no new orders [W_ID=%d, D_ID=%d]", w_id, d_id));
                 continue;
             }
 
             int no_o_id = rs.getInt("NO_O_ID");
-            orderIDs[d_id - 1] = no_o_id;
+            orderIDs[d_id - d_lo_id] = no_o_id;
             rs.close();
             rs = null;
 
             delivDeleteNewOrder.setInt(1, no_o_id);
             delivDeleteNewOrder.setInt(2, d_id);
             delivDeleteNewOrder.setInt(3, w_id);
-            if (trace) LOG.trace("delivDeleteNewOrder START");
             int result = delivDeleteNewOrder.executeUpdate();
-            if (trace) LOG.trace("delivDeleteNewOrder END");
             if (result != 1) {
                 // This code used to run in a loop in an attempt to make this work
                 // with MySQL's default weird consistency level. We just always run
@@ -164,14 +182,12 @@ public class Delivery extends TPCCProcedure {
             delivGetCustId.setInt(1, no_o_id);
             delivGetCustId.setInt(2, d_id);
             delivGetCustId.setInt(3, w_id);
-            if (trace) LOG.trace("delivGetCustId START");
             rs = delivGetCustId.executeQuery();
-            if (trace) LOG.trace("delivGetCustId END");
 
             if (!rs.next()) {
                 String msg = String.format("Failed to retrieve ORDER record [W_ID=%d, D_ID=%d, O_ID=%d]",
                                            w_id, d_id, no_o_id);
-                if (trace) LOG.warn(msg);
+                LOG.warn(msg);
                 throw new RuntimeException(msg);
             }
             c_id = rs.getInt("O_C_ID");
@@ -181,29 +197,25 @@ public class Delivery extends TPCCProcedure {
             delivUpdateCarrierId.setInt(2, no_o_id);
             delivUpdateCarrierId.setInt(3, d_id);
             delivUpdateCarrierId.setInt(4, w_id);
-            if (trace) LOG.trace("delivUpdateCarrierId START");
             result = delivUpdateCarrierId.executeUpdate();
-            if (trace) LOG.trace("delivUpdateCarrierId END");
 
             if (result != 1) {
                 String msg = String.format("Failed to update ORDER record [W_ID=%d, D_ID=%d, O_ID=%d]",
                                            w_id, d_id, no_o_id);
-                if (trace) LOG.warn(msg);
+                LOG.warn(msg);
                 throw new RuntimeException(msg);
             }
 
-            delivUpdateDeliveryDate.setTimestamp(1, timestamp);
+            delivUpdateDeliveryDate.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             delivUpdateDeliveryDate.setInt(2, no_o_id);
             delivUpdateDeliveryDate.setInt(3, d_id);
             delivUpdateDeliveryDate.setInt(4, w_id);
-            if (trace) LOG.trace("delivUpdateDeliveryDate START");
             result = delivUpdateDeliveryDate.executeUpdate();
-            if (trace) LOG.trace("delivUpdateDeliveryDate END");
 
             if (result == 0){
                 String msg = String.format("Failed to update ORDER_LINE records [W_ID=%d, D_ID=%d, O_ID=%d]",
                                            w_id, d_id, no_o_id);
-                if (trace) LOG.warn(msg);
+                LOG.warn(msg);
                 throw new RuntimeException(msg);
             }
 
@@ -211,14 +223,12 @@ public class Delivery extends TPCCProcedure {
             delivSumOrderAmount.setInt(1, no_o_id);
             delivSumOrderAmount.setInt(2, d_id);
             delivSumOrderAmount.setInt(3, w_id);
-            if (trace) LOG.trace("delivSumOrderAmount START");
             rs = delivSumOrderAmount.executeQuery();
-            if (trace) LOG.trace("delivSumOrderAmount END");
 
             if (!rs.next()) {
                 String msg = String.format("Failed to retrieve ORDER_LINE records [W_ID=%d, D_ID=%d, O_ID=%d]",
                                            w_id, d_id, no_o_id);
-                if (trace) LOG.warn(msg);
+                LOG.warn(msg);
                 throw new RuntimeException(msg);
             }
             ol_total = rs.getFloat("OL_TOTAL");
@@ -229,14 +239,12 @@ public class Delivery extends TPCCProcedure {
             delivUpdateCustBalDelivCnt.setInt(idx++, w_id);
             delivUpdateCustBalDelivCnt.setInt(idx++, d_id);
             delivUpdateCustBalDelivCnt.setInt(idx++, c_id);
-            if (trace) LOG.trace("delivUpdateCustBalDelivCnt START");
             result = delivUpdateCustBalDelivCnt.executeUpdate();
-            if (trace) LOG.trace("delivUpdateCustBalDelivCnt END");
 
             if (result == 0) {
                 String msg = String.format("Failed to update CUSTOMER record [W_ID=%d, D_ID=%d, C_ID=%d]",
                                            w_id, d_id, c_id);
-                if (trace) LOG.warn(msg);
+                LOG.warn(msg);
                 throw new RuntimeException(msg);
             }
         }
@@ -254,21 +262,19 @@ public class Delivery extends TPCCProcedure {
             terminalMessage.append("\n Carrier:   ");
             terminalMessage.append(o_carrier_id);
             terminalMessage.append("\n\n Delivered Orders\n");
-            for (int i = 1; i <= TPCCConfig.configDistPerWhse; i++) {
-                if (orderIDs[i - 1] >= 0) {
+            for (int i = d_lo_id; i <= d_hi_id; i++) {
+                if (orderIDs[i - d_lo_id] >= 0) {
                     terminalMessage.append("  District ");
                     terminalMessage.append(i < 10 ? " " : "");
                     terminalMessage.append(i);
                     terminalMessage.append(": Order number ");
-                    terminalMessage.append(orderIDs[i - 1]);
+                    terminalMessage.append(orderIDs[i - d_lo_id]);
                     terminalMessage.append(" was delivered.\n");
                 }
             } // FOR
             terminalMessage.append("+-----------------------------------------------------------------+\n\n");
             LOG.trace(terminalMessage.toString());
         }
-	
-		return null;
     }
 
 }

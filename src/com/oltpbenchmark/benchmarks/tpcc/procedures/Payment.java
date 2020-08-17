@@ -16,10 +16,7 @@
 
 package com.oltpbenchmark.benchmarks.tpcc.procedures;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -149,7 +146,6 @@ public class Payment extends TPCCProcedure {
         // payUpdateWhse =this.getPreparedStatement(conn, payUpdateWhseSQL);
 
         int districtID = TPCCUtil.randomNumber(terminalDistrictLowerID, terminalDistrictUpperID, gen);
-        int customerID = TPCCUtil.getCustomerID(gen);
 
         int x = TPCCUtil.randomNumber(1, 100, gen);
         int customerDistrictID;
@@ -167,7 +163,7 @@ public class Payment extends TPCCProcedure {
         long y = TPCCUtil.randomNumber(1, 100, gen);
         boolean customerByName;
         String customerLastName = null;
-        customerID = -1;
+        int customerID = -1;
         if (y <= 60) {
             // 60% lookups by last name
             customerByName = true;
@@ -179,6 +175,38 @@ public class Payment extends TPCCProcedure {
         }
 
         float paymentAmount = (float) (TPCCUtil.randomNumber(100, 500000, gen) / 100.0);
+
+        boolean done = false;
+        while (!done) {
+            try {
+                paymentTransaction(w_id,
+                        customerWarehouseID, paymentAmount, districtID,
+                        customerDistrictID, customerID,
+                        customerLastName, customerByName, conn);
+            }
+            catch (SQLException ex) {
+                SQLException ex2 = ex;
+                if (ex2 instanceof BatchUpdateException) {
+                    ex2 = ex2.getNextException();
+                }
+                if (ex2.getSQLState().equals("SE014")) {
+                    // Retry write conflicts
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(ex2.getMessage());
+                    }
+                    conn.rollback();
+                    continue;
+                }
+                throw ex;
+            }
+            done = true;
+        }
+        return null;
+    }
+
+    private void paymentTransaction(int w_id, int customerWarehouseID, float paymentAmount,
+        int districtID, int customerDistrictID, int customerID, String customerLastName,
+        boolean customerByName, Connection conn) throws SQLException  {
 
         String w_street_1, w_street_2, w_city, w_state, w_zip, w_name;
         int w_nationkey;
@@ -295,7 +323,7 @@ public class Payment extends TPCCProcedure {
         payInsertHist.setInt(3, c.c_id);
         payInsertHist.setInt(4, districtID);
         payInsertHist.setInt(5, w_id);
-        payInsertHist.setTimestamp(6, w.getBenchmarkModule().getTimestamp(System.currentTimeMillis()));
+        payInsertHist.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
         payInsertHist.setDouble(7, paymentAmount);
         payInsertHist.setString(8, h_data);
         payInsertHist.executeUpdate();
@@ -386,8 +414,6 @@ public class Payment extends TPCCProcedure {
 
             LOG.trace(terminalMessage.toString());
         }
-
-        return null;
     }
 
     // attention duplicated code across trans... ok for now to maintain separate
