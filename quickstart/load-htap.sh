@@ -19,6 +19,8 @@ if [[ $SOURCE == */database/* ]]; then
     backupid=undefined
     if [[ $SCALE == "100" ]]; then
         backupid=2235534337
+    elif [[ $SCALE == "250" ]]; then
+        backupid=355638273
     elif [[ $SCALE == "1000" ]]; then
         backupid=1384221697
     elif [[ $SCALE == "10000" ]]; then

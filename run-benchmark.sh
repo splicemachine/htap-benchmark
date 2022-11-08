@@ -29,9 +29,9 @@ show_usage() {
   echo
   echo -e "\t-d, --restoreDirectory \t\tRestore directory if action is restore.  Defaults to s3a://splice-benchmark-data/database/HTAP/$SCALE "
   echo
-  echo -e "\t-b, --backupId \t\t\tBackup id of the restored schema.  Defaults for scale 100 to 2235534337, scale 1000 to 1384221697 and scale 10000 to 39810049 "
+  echo -e "\t-b, --backupId \t\t\tBackup id of the restored schema.  Defaults for scale 100 to 2235534337, scale 250 to 355638273, scale 1000 to 1384221697 and scale 10000 to 39810049 "
   echo
-  echo -e "\t-x, --restoreSouceSchema \tSchema of the restored database.  Defaults to htap "
+  echo -e "\t-x, --restoreSourceSchema \tSchema of the restored database.  Defaults to htap "
   echo
   echo -e "\t-y, --dataDirectory \t\tIf creating a database, the location of the import files.  Defaults to s3a://splice-benchmark-data/flat/HTAP/htap-$SCALE "
   echo
@@ -155,7 +155,7 @@ while (( "$#" )); do
       EXECUTE=$2
       shift 2
       ;;
-    -x|--restoreSouceSchema)
+    -x|--restoreSourceSchema)
       RESTORE_SOURCE_SCHEMA=$2
       shift 2
       ;;    
@@ -198,6 +198,8 @@ if [[ "$ACTION" = "restore" ]]; then
   then
     if [[ $SCALE == "100" ]]; then
         BACKUP_ID=2235534337
+    elif [[ $SCALE == "250" ]]; then
+        BACKUP_ID=355638273
     elif [[ $SCALE == "1000" ]]; then
         BACKUP_ID=1384221697
     elif [[ $SCALE == "10000" ]]; then
